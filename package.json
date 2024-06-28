@@ -1,0 +1,38 @@
+{
+  "name": "xstreaming-player",
+  "version": "0.1.0",
+  "description": "Player component for XStreaming. Base on xCloudPlayer.",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "npm run build && node dist/Server.js",
+    "build": "rimraf dist && tsc && webpack",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Geocld/XStreaming-player.git"
+  },
+  "author": "Geocld <lijiahao5372@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Geocld/XStreaming-player/issues"
+  },
+  "homepage": "https://github.com/Geocld/XStreaming-player",
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.11.5",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-import": "^2.24.1",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.2",
+    "ts-loader": "^9.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "webpack": "^5.52.1",
+    "webpack-cli": "^5.0.1"
+  }
+}
