@@ -5,6 +5,7 @@ import Driver from './Driver'
 const KEYCODE_KEY_N = 'n'
 
 export default class GamepadDriver implements Driver {
+  _hasLog = false
 
     _application: xStreamingPlayer | null = null
 
@@ -170,20 +171,20 @@ export default class GamepadDriver implements Driver {
     }
 
     requestStates():Array<InputFrame> {
-        const gamepads = navigator.getGamepads()
+      const states:Array<InputFrame> = []
+      const gamepads = navigator.getGamepads()
         // let foundActive = false
-        const states:Array<InputFrame> = []
-        for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
-            const gamepadState = gamepads[gamepad]
+        
+      for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
+          const gamepadState = gamepads[gamepad]
 
-            if (gamepadState !== null && gamepadState.connected) {
-                const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
-                state.GamepadIndex = gamepadState.index
-                states.push(state)
-            }
-        }
-
-        return states
+          if (gamepadState !== null && gamepadState.connected) {
+              const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
+              state.GamepadIndex = gamepadState.index
+              states.push(state)
+          }
+      }
+      return states
     }
 
     normaliseAxis(value: number): number {
@@ -239,7 +240,10 @@ export default class GamepadDriver implements Driver {
 
         // Set buttons
         for(const button in maping) {
-            frame[button] = buttons[maping[button]].value || 0
+            // NOTE: Some devices dont have nexus button, gamepad.buttons return only 15 length
+            if (buttons[maping[button]]) {
+              frame[button] = buttons[maping[button]].value || 0
+            }
         }
 
         // Set axis
