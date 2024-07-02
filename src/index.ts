@@ -35,11 +35,26 @@ export default class xStreamingPlayer {
     _isResetting = false
 
     _webrtcConfiguration = {
-        iceServers: [{
-            urls: 'stun:stun.l.google.com:19302',
-        }, {
-            urls: 'stun:stun1.l.google.com:19302',
-        }],
+        iceServers: [
+            {
+                urls: 'stun:relay1.expressturn.com',
+            },
+            {
+                urls: 'stun:relay2.expressturn.com',
+            },
+            {
+                urls: 'stun:stun.kinesisvideo.us-east-1.amazonaws.com:443',
+            },
+            {
+                urls: 'stun:stun.douyucdn.cn:18000',
+            },
+            {
+                urls: 'stun:stun.l.google.com:19302',
+            }, 
+            {
+                urls: 'stun:stun1.l.google.com:19302',
+            },
+        ],
     }
 
     _webrtcDataChannelsConfig = {
@@ -360,9 +375,14 @@ export default class xStreamingPlayer {
     }
 
     setIceCandidates(iceDetails){
+        if(iceDetails.length === 0){
+            window.alert('Error: No candidates received!')
+        }
+
         for(const candidate in iceDetails){
             if(iceDetails[candidate].candidate === 'a=end-of-candidates'){
-                iceDetails[candidate].candidate = ''
+                // iceDetails[candidate].candidate = ''
+                continue
             }
 
             this._webrtcClient?.addIceCandidate({
