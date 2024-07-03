@@ -516,12 +516,10 @@ export default class xStreamingPlayer {
                 this._webrtcClient.getStats().then(stats => {
                     stats.forEach(stat => {
                         if (stat.type === 'inbound-rtp' && stat.kind === 'video') {
-                            // FPS(帧率)
-                            if (stat.type === 'inbound-rtp' && stat.kind === 'video') {
-                                performances.fps = stat.framesPerSecond || 0
-                            }
+                            // FPS
+                            performances.fps = stat.framesPerSecond || 0
     
-                            // Frames Dropped（丢帧）
+                            // Frames Dropped
                             const framesDropped = stat.framesDropped
                             if (framesDropped !== undefined) {
                                 const framesReceived = stat.framesReceived
@@ -531,7 +529,7 @@ export default class xStreamingPlayer {
                                 performances.fl = '-1 (-1%)'
                             }
     
-                            // Packets Lost（丢包）
+                            // Packets Lost
                             const packetsLost = stat.packetsLost
                             if (packetsLost !== undefined) {
                                 const packetsReceived = stat.packetsReceived
@@ -544,7 +542,7 @@ export default class xStreamingPlayer {
                             if (globalThis._lastStat) {
                                 try {
                                     const lastStat = globalThis._lastStat
-                                    // Bitrate(码率)
+                                    // Bitrate
                                     const timeDiff = stat.timestamp - lastStat.timestamp
                                     if (timeDiff !== 0) {
                                         const bitrate = 8 * (stat.bytesReceived - lastStat.bytesReceived) / timeDiff / 1000
@@ -554,11 +552,17 @@ export default class xStreamingPlayer {
                                     }
                                     
         
-                                    // Decode time（解码时间）
+                                    // Decode time
+                                    // Show decode time is a bug on Chromium based browsers on Android,so just reduce it.
+                                    // Refer: https://github.com/redphx/better-xcloud/discussions/113
                                     const totalDecodeTimeDiff = stat.totalDecodeTime - lastStat.totalDecodeTime
                                     const framesDecodedDiff = stat.framesDecoded - lastStat.framesDecoded
                                     if (framesDecodedDiff !== 0) {
-                                        const currentDecodeTime = totalDecodeTimeDiff / framesDecodedDiff * 1000
+                                        let currentDecodeTime = totalDecodeTimeDiff / framesDecodedDiff * 1000
+
+                                        if (currentDecodeTime > 20) {
+                                            currentDecodeTime -= 20
+                                        }
                                         performances.decode = `${currentDecodeTime.toFixed(2)}ms`
                                     } else {
                                         performances.decode = '--'
