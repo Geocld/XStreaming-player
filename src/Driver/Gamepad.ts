@@ -5,7 +5,6 @@ import Driver from './Driver'
 const KEYCODE_KEY_N = 'n'
 
 export default class GamepadDriver implements Driver {
-  _hasLog = false
 
     _application: xStreamingPlayer | null = null
 
@@ -68,6 +67,8 @@ export default class GamepadDriver implements Driver {
 
     _nexusOverrideN = false
 
+    _isVirtualButtonPressing = false
+
     // constructor() {
     // }
 
@@ -103,17 +104,11 @@ export default class GamepadDriver implements Driver {
                 }
             }
         }, 500)
-
-        window.addEventListener('keydown', this._downFunc)
-        window.addEventListener('keyup', this._upFunc)
     }
 
     stop() {
         // console.log('xStreamingPlayer Driver/Gamepad.ts - Stop collecting events:', this._gamepads)
         clearInterval(this._activeGamepadsInterval)
-
-        window.removeEventListener('keydown', this._downFunc)
-        window.removeEventListener('keyup', this._upFunc)
     }
 
     _downFunc = (e: KeyboardEvent) => { this.onKeyChange(e, true) }
@@ -128,19 +123,28 @@ export default class GamepadDriver implements Driver {
     }
 
     pressButtonStart(index:number, button:string) {
-        // console.log('pressButtonStart:', index, button)
+        console.log('pressButtonStart:', index, button)
+        this._isVirtualButtonPressing = true
+
         this._shadowGamepad[index][button] = 1
         this._application?.getChannelProcessor('input').queueGamepadState(this._shadowGamepad[index])
+
     }
 
     pressButtonEnd(index:number, button:string) {
         // console.log('pressButtonEnd:', index, button)
         this._shadowGamepad[index][button] = 0
         this._application?.getChannelProcessor('input').queueGamepadState(this._shadowGamepad[index])
+        this._isVirtualButtonPressing = false
     }
 
     // left stick move
     moveLeftStick(index: number, x: number, y: number) {
+        if (x !== 0 || y !== 0) {
+            this._isVirtualButtonPressing = true
+        } else {
+            this._isVirtualButtonPressing = false
+        }
         this._shadowGamepad[index].LeftThumbXAxis = x
         this._shadowGamepad[index].LeftThumbYAxis = -y
         this._application?.getChannelProcessor('input').queueGamepadState(this._shadowGamepad[index])
@@ -148,6 +152,11 @@ export default class GamepadDriver implements Driver {
 
     // right stick move
     moveRightStick(index: number, x: number, y: number) {
+        if (x !== 0 || y !== 0) {
+            this._isVirtualButtonPressing = true
+        } else {
+            this._isVirtualButtonPressing = false
+        }
         this._shadowGamepad[index].RightThumbXAxis = x
         this._shadowGamepad[index].RightThumbYAxis = -y
         this._application?.getChannelProcessor('input').queueGamepadState(this._shadowGamepad[index])
@@ -163,8 +172,10 @@ export default class GamepadDriver implements Driver {
             }
         }
 
-        this._application?.getChannelProcessor('input')._inputFps.count()
-        this._application?.getChannelProcessor('input').queueGamepadStates(gpState)
+        if (!this._isVirtualButtonPressing) {
+            this._application?.getChannelProcessor('input')._inputFps.count()
+            this._application?.getChannelProcessor('input').queueGamepadStates(gpState)
+        }
 
         // requestAnimationFrame(() => { this.run() })
         setTimeout(() => { this.run() }, 1000 / 60)
