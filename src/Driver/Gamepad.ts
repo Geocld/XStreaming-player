@@ -164,13 +164,19 @@ export default class GamepadDriver implements Driver {
 
     // Only ran when new gamepad driver is selected
     run(){
-        const gpState = this.requestStates()
+        let gpState
+        if (this._application?._gamepad_kernal === 'Native') {
+            gpState = [globalThis.gpState]
+        } else {
+            gpState = this.requestStates()
 
-        if(gpState[0] !== undefined) {
-            if(this._nexusOverrideN === true){
-                gpState[0].Nexus = 1
+            if(gpState[0] !== undefined) {
+                if(this._nexusOverrideN === true){
+                    gpState[0].Nexus = 1
+                }
             }
         }
+        
 
         if (!this._isVirtualButtonPressing) {
             this._application?.getChannelProcessor('input')._inputFps.count()
@@ -182,20 +188,19 @@ export default class GamepadDriver implements Driver {
     }
 
     requestStates():Array<InputFrame> {
-      const states:Array<InputFrame> = []
-      const gamepads = navigator.getGamepads()
-        // let foundActive = false
-        
-      for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
-          const gamepadState = gamepads[gamepad]
+        const states:Array<InputFrame> = []
+        const gamepads = navigator.getGamepads()
+            
+        for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
+            const gamepadState = gamepads[gamepad]
 
-          if (gamepadState !== null && gamepadState.connected) {
-              const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
-              state.GamepadIndex = gamepadState.index
-              states.push(state)
-          }
-      }
-      return states
+            if (gamepadState !== null && gamepadState.connected) {
+                const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
+                state.GamepadIndex = gamepadState.index
+                states.push(state)
+            }
+        }
+        return states
     }
 
     normaliseAxis(value: number): number {
@@ -253,7 +258,7 @@ export default class GamepadDriver implements Driver {
         for(const button in maping) {
             // NOTE: Some devices dont have nexus button, gamepad.buttons return only 15 length
             if (buttons[maping[button]]) {
-              frame[button] = buttons[maping[button]].value || 0
+                frame[button] = buttons[maping[button]].value || 0
             }
         }
 

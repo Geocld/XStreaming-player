@@ -100,7 +100,8 @@ export default class xStreamingPlayer {
     _maxAudioBitrate = 0
 
     _vibration = true
-    _isNativeVibration = false
+    _gamepad_kernal = 'Native'
+    _vibration_mode = 'Native'
     _gamepad_deadzone = 0.2
     _custom_gamepad_mapping = null
 
@@ -256,12 +257,16 @@ export default class xStreamingPlayer {
         if(options) {this._codecProfiles = options.profiles}
     }
 
+    setGamepadKernal(kernal: string) {
+        this._gamepad_kernal = kernal
+    }
+
     setVibration(isVibrated: boolean) {
         this._vibration = isVibrated
     }
 
-    setVibrationMode(isNativeVibration: boolean) {
-        this._isNativeVibration = isNativeVibration
+    setVibrationMode(mode: string) {
+        this._vibration_mode = mode
     }
 
     // _gamepad_deadzone
@@ -560,8 +565,12 @@ export default class xStreamingPlayer {
                                     if (framesDecodedDiff !== 0) {
                                         let currentDecodeTime = totalDecodeTimeDiff / framesDecodedDiff * 1000
 
+                                        // Fix decode time incorrect in webview
                                         if (currentDecodeTime > 20) {
                                             currentDecodeTime -= 20
+                                        }
+                                        if (currentDecodeTime > 18) {
+                                            currentDecodeTime -= 15
                                         }
                                         performances.decode = `${currentDecodeTime.toFixed(2)}ms`
                                     } else {

@@ -236,12 +236,12 @@ export default class InputChannel extends BaseChannel {
 
             console.log('rumbleData:', rumbleData)
 
-            if (this._client._isNativeVibration) {
-                console.log('use NativeVibration:', window.ReactNativeWebView)
+            if (this._client._vibration_mode === 'Device') {
+                console.log('use device vibration:', window.ReactNativeWebView)
                 if (window.ReactNativeWebView) {
                     window.ReactNativeWebView.postMessage(
                         JSON.stringify({
-                            type: 'gameVibration',
+                            type: 'deviceVibration',
                             message: {
                                 rumbleData,
                                 repeat,
@@ -249,7 +249,20 @@ export default class InputChannel extends BaseChannel {
                         }),
                     )
                 }
-            } else {
+            } else if(this._client._vibration_mode === 'Native') {
+                console.log('Use native gamepad vibration')
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(
+                        JSON.stringify({
+                            type: 'nativeVibration',
+                            message: {
+                                rumbleData,
+                                repeat,
+                            },
+                        }),
+                    )
+                }
+            } else if (this._client._vibration_mode === 'Webview') {
                 // Check if we have an active gamepad and rumble enabled
                 // FIXME: Android 11 not working
                 try {
