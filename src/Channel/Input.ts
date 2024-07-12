@@ -154,7 +154,7 @@ export default class InputChannel extends BaseChannel {
                 
                 this.send(packet.toBuffer())
             }
-        }, 16)// 16 ms = 1 frame (1000/60)
+        }, 8)// 16 ms = 1 frame (1000/60)
     }
 
     mergeState(gpState:InputFrame, kbState:InputFrame, adHoc:InputFrame):InputFrame{

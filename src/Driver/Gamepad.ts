@@ -184,7 +184,7 @@ export default class GamepadDriver implements Driver {
         }
 
         // requestAnimationFrame(() => { this.run() })
-        setTimeout(() => { this.run() }, 1000 / 60)
+        setTimeout(() => { this.run() }, 1000 / 120)
     }
 
     requestStates():Array<InputFrame> {
