@@ -60,6 +60,7 @@ export default class xStreamingPlayer {
     _webrtcDataChannelsConfig = {
         'input': {
             ordered: true,
+            maxRetransmits: 99,
             protocol: '1.0',
         },
         'chat': {
@@ -153,6 +154,13 @@ export default class xStreamingPlayer {
         })
         this._webrtcClient.addTransceiver('video', {
             direction: 'recvonly',
+        })
+
+        this._webrtcClient.addEventListener( 'connectionstatechange', () => {
+            console.log('connectionstatechange:', this._webrtcClient?.connectionState)
+            if (this._webrtcClient?.connectionState === 'connected') {
+                this.getEventBus().emit('connectionstate', { state: this._webrtcClient?.connectionState})
+            }
         })
     }
 
@@ -583,7 +591,7 @@ export default class xStreamingPlayer {
                             }
                             globalThis._lastStat = stat
                         } else if (stat.type === 'candidate-pair' && stat.state === 'succeeded') {
-                            // Round Trip Time（延迟）
+                            // Round Trip Time
                             const roundTripTime = typeof stat.currentRoundTripTime !== 'undefined' ? stat.currentRoundTripTime * 1000 : '???'
                             performances.rtt = `${roundTripTime}ms`
                         }

@@ -6,8 +6,8 @@ export default interface Driver {
     start(): void;
     stop(): void;
 
-    pressButtonStart(index: number, button: string): void;
-    pressButtonEnd(index: number, button: string): void;
+    pressButtonStart(button: string): void;
+    pressButtonEnd(button: string): void;
 
     requestStates(): Array<InputFrame>;
     mapStateLabels(buttons: Array<boolean>, axes:Array<any>): InputFrame;

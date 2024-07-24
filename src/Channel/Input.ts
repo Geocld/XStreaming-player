@@ -587,20 +587,20 @@ export default class InputChannel extends BaseChannel {
         return n > t ? t : n < a ? a : this._convertToInt16(n)
     }
 
-    pressButtonStart(index:number, button:string){
-        this._client._inputDriver.pressButtonStart(index, button)
+    pressButtonStart(button:string){
+        this._client._inputDriver.pressButtonStart(button)
     }
 
-    pressButtonEnd(index:number, button:string){
-        this._client._inputDriver.pressButtonEnd(index, button)
+    pressButtonEnd(button:string){
+        this._client._inputDriver.pressButtonEnd(button)
     }
 
-    moveLeftStick(index: number, x: number, y: number) {
-        this._client._inputDriver.moveLeftStick(index, x, y)
+    moveLeftStick(x: number, y: number) {
+        this._client._inputDriver.moveLeftStick(x, y)
     }
 
-    moveRightStick(index: number, x: number, y: number) {
-        this._client._inputDriver.moveRightStick(index, x, y)
+    moveRightStick(x: number, y: number) {
+        this._client._inputDriver.moveRightStick(x, y)
     }
 
     destroy() {
