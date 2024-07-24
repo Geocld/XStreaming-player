@@ -161,6 +161,10 @@ export default class xStreamingPlayer {
             if (this._webrtcClient?.connectionState === 'connected') {
                 this.getEventBus().emit('connectionstate', { state: this._webrtcClient?.connectionState})
             }
+            if (this._webrtcClient?.connectionState === 'failed') {
+                console.log('restartIce')
+                this._webrtcClient.restartIce()
+            }
         })
     }
 
