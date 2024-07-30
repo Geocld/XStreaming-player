@@ -33,7 +33,13 @@ export default class VideoComponent {
             videoRender.style.touchAction = 'none'
             videoRender.style.width = '100%'
             videoRender.style.height = '100%'
-            videoRender.style.objectFit = 'contain'
+
+            if (this._client._video_format === 'Stretch') {
+                videoRender.style.objectFit = 'fill'
+            } else {
+                videoRender.style.objectFit = 'contain'
+            }
+            
             // videoRender.style.backgroundColor = 'black'
 
             // videoRender.muted = true

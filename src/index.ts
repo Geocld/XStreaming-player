@@ -37,6 +37,15 @@ export default class xStreamingPlayer {
     _webrtcConfiguration = {
         iceServers: [
             {
+                urls: 'stun:worldaz.relay.teams.microsoft.com:3478',
+            },
+            {
+                urls: 'stun:stun.l.google.com:19302',
+            }, 
+            {
+                urls: 'stun:stun1.l.google.com:19302',
+            },
+            {
                 urls: 'stun:relay1.expressturn.com',
             },
             {
@@ -47,12 +56,6 @@ export default class xStreamingPlayer {
             },
             {
                 urls: 'stun:stun.douyucdn.cn:18000',
-            },
-            {
-                urls: 'stun:stun.l.google.com:19302',
-            }, 
-            {
-                urls: 'stun:stun1.l.google.com:19302',
             },
         ],
     }
@@ -101,6 +104,7 @@ export default class xStreamingPlayer {
     _maxAudioBitrate = 0
 
     _vibration = true
+    _video_format = ''
     _gamepad_kernal = 'Native'
     _vibration_mode = 'Native'
     _gamepad_deadzone = 0.2
@@ -262,6 +266,10 @@ export default class xStreamingPlayer {
         newLines = newLines.concat(lines.slice(line, lines.length))
 
         return newLines.join('\n')
+    }
+
+    setVideoFormat(format: string) {
+        this._video_format = format
     }
 
     setCodecPreferences(mimeType:string, options?:{ profiles: Array<any> }){
