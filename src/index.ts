@@ -168,6 +168,9 @@ export default class xStreamingPlayer {
             if (this._webrtcClient?.connectionState === 'failed') {
                 console.log('restartIce')
                 this._webrtcClient.restartIce()
+                if (this._connectFailHandler) {
+                    this._connectFailHandler()
+                }
             }
         })
     }
@@ -416,6 +419,12 @@ export default class xStreamingPlayer {
                 sdpMLineIndex: iceDetails[candidate].sdpMLineIndex,
             })
         }
+    }
+
+    _connectFailHandler
+
+    setConnectFailHandler(listener) {
+        this._connectFailHandler = listener
     }
 
     getChannel(name:string){
