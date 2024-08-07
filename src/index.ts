@@ -63,7 +63,6 @@ export default class xStreamingPlayer {
     _webrtcDataChannelsConfig = {
         'input': {
             ordered: true,
-            maxRetransmits: 99,
             protocol: '1.0',
         },
         'chat': {
