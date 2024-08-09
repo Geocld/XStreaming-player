@@ -183,15 +183,16 @@ export default class xStreamingPlayer {
 
             this.getEventBus().emit('connectionstate', { state: 'new'})
 
-            if(this._codecPreference !== ''){
-                console.log('xStreamingPlayer index.ts - createOffer() Set codec preference mimetype to:', this._codecPreference)
-                this._setCodec(this._codecPreference, this._codecProfiles)
-            }
-
             this._webrtcClient.createOffer({
                 offerToReceiveAudio: true,
                 offerToReceiveVideo: true,
             }).then((offer) => {
+
+                // Set Codec
+                if(this._codecPreference !== '' && offer.sdp){
+                    console.log('xStreamingPlayer index.ts - createOffer() Set codec preference mimetype to:', this._codecPreference)
+                    offer.sdp = this._setCodec(offer.sdp, this._codecPreference, this._codecProfiles)
+                }
 
                 // Set bitrate
                 if(this._maxVideoBitrate > 0){
@@ -300,8 +301,7 @@ export default class xStreamingPlayer {
         this._custom_gamepad_mapping = maping
     }
 
-    _setCodec(mimeType:string, codecProfiles:Array<any>){
-        const tcvr = this._webrtcClient?.getTransceivers()[1]
+    _setCodec(sdp: string, mimeType:string, codecProfiles:Array<any>){
         const capabilities = RTCRtpReceiver.getCapabilities('video')
         if(capabilities === null){
             console.log('xStreamingPlayer index.ts - _setCodec() Failed to get video codecs')
@@ -329,12 +329,60 @@ export default class xStreamingPlayer {
 
             if(prefCodecs.length === 0){
                 console.log('xStreamingPlayer index.ts - _setCodec() No video codec matches with mimetype:', mimeType)
+                return sdp
             }
 
-            if(tcvr?.setCodecPreferences !== undefined){
-                tcvr?.setCodecPreferences(prefCodecs)
-            } else {
-                console.log('xStreamingPlayer index.ts - _setCodec() Browser does not support setCodecPreferences()')
+            console.log('mimeType:', mimeType)
+            // FIX H.264 codec
+            if (mimeType.indexOf('H264') > -1) {
+                // High=4d Medium=42e Low=420
+                const h264Pattern = /a=fmtp:(\d+).*profile-level-id=([0-9a-f]{6})/g
+                const profilePrefix = codecProfiles[0]
+                const preferredCodecIds: string[] = []
+                // Find all H.264 codec profile IDs
+                const matches = sdp.matchAll(h264Pattern) || []
+                for (const match of matches) {
+                    const id = match[1]
+                    const profileId = match[2]
+
+                    if (profileId.startsWith(profilePrefix)) {
+                        preferredCodecIds.push(id)
+                    }
+                }
+                // No preferred IDs found
+                if (!preferredCodecIds.length) {
+                    return sdp
+                }
+
+                const lines = sdp.split('\r\n')
+                for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+                    const line = lines[lineIndex]
+                    if (!line.startsWith('m=video')) {
+                        continue
+                    }
+            
+                    // https://datatracker.ietf.org/doc/html/rfc4566#section-5.14
+                    // m=<media> <port> <proto> <fmt>
+                    // m=video 9 UDP/TLS/RTP/SAVPF 127 39 102 104 106 108
+                    const tmp = line.trim().split(' ')
+            
+                    // Get array of <fmt>
+                    // ['127', '39', '102', '104', '106', '108']
+                    let ids = tmp.slice(3)
+            
+                    // Remove preferred IDs in the original array
+                    ids = ids.filter(item => !preferredCodecIds.includes(item))
+            
+                    // Put preferred IDs at the beginning
+                    ids = preferredCodecIds.concat(ids)
+            
+                    // Update line's content
+                    lines[lineIndex] = tmp.slice(0, 3).concat(ids).join(' ')
+            
+                    break
+                }
+
+                return lines.join('\r\n')
             }
         }
     }
