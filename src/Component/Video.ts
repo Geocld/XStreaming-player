@@ -36,6 +36,8 @@ export default class VideoComponent {
 
             if (this._client._video_format === 'Stretch') {
                 videoRender.style.objectFit = 'fill'
+            } else if (this._client._video_format === 'Zoom') {
+                videoRender.style.objectFit = 'cover'
             } else {
                 videoRender.style.objectFit = 'contain'
             }
