@@ -177,8 +177,10 @@ export default class GamepadDriver implements Driver {
         
 
         if (!this._isVirtualButtonPressing) {
-            this._application?.getChannelProcessor('input')._inputFps.count()
-            this._application?.getChannelProcessor('input').queueGamepadStates(gpState)
+            if (this._application?.getChannelProcessor('input')) {
+                this._application?.getChannelProcessor('input')._inputFps.count()
+                this._application?.getChannelProcessor('input').queueGamepadStates(gpState)
+            }
         }
 
         // requestAnimationFrame(() => { this.run() })

@@ -87,6 +87,8 @@ export default class InputChannel extends BaseChannel {
     _rumbleEnabled = true
     _adhocState
 
+    _isVirtualButtonPressing = false
+
     constructor(channelName, client) {
         super(channelName, client)
 
@@ -116,7 +118,7 @@ export default class InputChannel extends BaseChannel {
         
         this._inputInterval = setInterval(() => {
             // Keyboard mask for legacy input
-            if(this._client._config.input_legacykeyboard === true && this.getGamepadQueueLength() === 0){
+            if(this._client._config.input_legacykeyboard === true && this.getGamepadQueueLength() === 0 && !this._isVirtualButtonPressing){
                 const gpState = this.getClient()._inputDriver.requestStates()
                 const kbState = this.getClient()._keyboardDriver.requestState()
                 const mergedState = this.mergeState(gpState[0], kbState, this._adhocState)
@@ -588,11 +590,13 @@ export default class InputChannel extends BaseChannel {
     }
 
     pressButtonStart(button:string){
+        this._isVirtualButtonPressing = true
         this._client._inputDriver.pressButtonStart(button)
     }
 
     pressButtonEnd(button:string){
         this._client._inputDriver.pressButtonEnd(button)
+        this._isVirtualButtonPressing = false
     }
 
     moveLeftStick(x: number, y: number) {

@@ -63,16 +63,18 @@ export default class VideoComponent {
             }
 
             const serverDataLoop = (t, i) => {
-                videoRender.requestVideoFrameCallback(serverDataLoop)
-                this._videoFps.count()
+                if (this._client.getChannelProcessor('input')) {
+                    videoRender.requestVideoFrameCallback(serverDataLoop)
+                    this._videoFps.count()
 
-                this._client.getChannelProcessor('input').addProcessedFrame({
-                    serverDataKey: i.rtpTimestamp,
-                    firstFramePacketArrivalTimeMs: i.receiveTime,
-                    frameSubmittedTimeMs: i.receiveTime,
-                    frameDecodedTimeMs: i.expectedDisplayTime,
-                    frameRenderedTimeMs: i.expectedDisplayTime,
-                })
+                    this._client.getChannelProcessor('input').addProcessedFrame({
+                        serverDataKey: i.rtpTimestamp,
+                        firstFramePacketArrivalTimeMs: i.receiveTime,
+                        frameSubmittedTimeMs: i.receiveTime,
+                        frameDecodedTimeMs: i.expectedDisplayTime,
+                        frameRenderedTimeMs: i.expectedDisplayTime,
+                    })
+                }
             }
             videoRender.requestVideoFrameCallback(serverDataLoop)
             this._videoRender = videoRender

@@ -641,13 +641,16 @@ export default class xStreamingPlayer {
                                     if (framesDecodedDiff !== 0) {
                                         let currentDecodeTime = totalDecodeTimeDiff / framesDecodedDiff * 1000
 
-                                        // Fix decode time incorrect in webview
-                                        if (currentDecodeTime > 20) {
-                                            currentDecodeTime -= 20
+                                        if (window.ReactNativeWebView) {
+                                            // Fix decode time incorrect in webview
+                                            if (currentDecodeTime > 20) {
+                                                currentDecodeTime -= 20
+                                            }
+                                            if (currentDecodeTime > 18) {
+                                                currentDecodeTime -= 15
+                                            }
                                         }
-                                        if (currentDecodeTime > 18) {
-                                            currentDecodeTime -= 15
-                                        }
+                                        
                                         performances.decode = `${currentDecodeTime.toFixed(2)}ms`
                                     } else {
                                         performances.decode = '--'

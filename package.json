@@ -1,6 +1,6 @@
 {
   "name": "xstreaming-player",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "description": "Player component for XStreaming. Base on xCloudPlayer.",
   "main": "dist/index.js",
   "scripts": {
