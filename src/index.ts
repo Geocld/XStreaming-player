@@ -197,12 +197,12 @@ export default class xStreamingPlayer {
                 // Set bitrate
                 if(this._maxVideoBitrate > 0){
                     console.log('xStreamingPlayer index.ts - createOffer() Set max video bitrate to:', this._maxVideoBitrate, 'kbps')
-                    offer.sdp = this._setBitrate(offer.sdp, 'video', this._maxVideoBitrate)
+                    offer.sdp = this._setBitrate(offer.sdp, 'video', this._maxVideoBitrate * 1024)
                 }
 
                 if(this._maxAudioBitrate > 0){
                     console.log('xStreamingPlayer index.ts - createOffer() Set max audio bitrate to:', this._maxVideoBitrate, 'kbps')
-                    offer.sdp = this._setBitrate(offer.sdp, 'audio', this._maxAudioBitrate)
+                    offer.sdp = this._setBitrate(offer.sdp, 'audio', this._maxAudioBitrate * 1024)
                 }
 
                 if((this._config.sound_force_mono || false) !== true){
@@ -228,47 +228,63 @@ export default class xStreamingPlayer {
         this._sdpHandler = listener
     }
 
-    setAudioBitrate(bitrate_kbps:number){
-        this._maxAudioBitrate = bitrate_kbps
+    setAudioBitrate(bitrate: number){
+        this._maxAudioBitrate = bitrate
     }
 
-    setVideoBitrate(bitrate_kbps:number){
-        this._maxVideoBitrate = bitrate_kbps
+    // bitrate Mb/s
+    setVideoBitrate(bitrate: number){
+        this._maxVideoBitrate = bitrate
     }
 
     setControllerRumble(state:boolean){
         this.getChannelProcessor('input')._rumbleEnabled = state
     }
 
-    _setBitrate(sdp, media, bitrate) {
-        const lines = sdp.split('\n')
-        let line = -1
-        for(let i=0; i < lines.length; i++) {
-            if(lines[i].indexOf('m='+media) === 0) {
-                line = i
-                break
+    _setBitrate(sdp: any, media: string, bitrate: number) {
+        const lines = sdp.split('\r\n')
+
+        for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+            let _media: string = ''
+            let line = lines[lineNumber]
+            if (!line.startsWith('m=')) {
+                continue
+            }
+            if (line.startsWith(`m=${media}`)) {
+                _media = media
+            }
+            // Invalid media, continue looking
+            if (!_media) {
+                continue
+            }
+
+            const bLine = `b=AS:${bitrate}`
+
+            while (lineNumber++, lineNumber < lines.length) {
+                line = lines[lineNumber]
+
+                // Ignore lines that start with "i=" or "c="
+                if (line.startsWith('i=') || line.startsWith('c=')) {
+                    continue
+                }
+
+                if (line.startsWith('b=AS:')) {
+                    // Replace bitrate
+                    lines[lineNumber] = bLine
+                    // Stop lookine for "b=AS:" line
+                    break
+                }
+
+                if (line.startsWith('m=')) {
+                    // "b=AS:" line not found, add "b" line before "m="
+                    lines.splice(lineNumber, 0, bLine)
+                    // Stop
+                    break
+                }
             }
         }
-        if (line === -1) {
-            console.debug('Could not find the m line for', media)
-            return sdp
-        }
-        line++
 
-        while(lines[line].indexOf('i=') === 0 || lines[line].indexOf('c=') === 0) {
-            line++
-        }
-       
-        if (lines[line].indexOf('b') === 0) {
-            lines[line] = 'b=AS:'+bitrate
-            return lines.join('\n')
-        }
-        
-        let newLines = lines.slice(0, line)
-        newLines.push('b=AS:'+bitrate)
-        newLines = newLines.concat(lines.slice(line, lines.length))
-
-        return newLines.join('\n')
+        return lines.join('\r\n')
     }
 
     setVideoFormat(format: string) {

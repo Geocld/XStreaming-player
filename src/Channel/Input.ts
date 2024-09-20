@@ -288,7 +288,6 @@ export default class InputChannel extends BaseChannel {
                                 rumbleData.rightTrigger = 0
                             }
 
-                            console.log('gamepad.vibrationActuator?.playEffect')
                             gamepad.vibrationActuator?.playEffect(gamepad.vibrationActuator.type, rumbleData)
 
                             if(repeat > 0) {
