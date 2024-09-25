@@ -125,7 +125,7 @@ export default class KeyboardDriver {
     onKeyChange(e: KeyboardEvent, down: boolean) {
         const val = down ? 1 : 0
 
-        const mappedButton = this._mouseKeyboardConfig._keymapping[e.key]
+        const mappedButton = this._mouseKeyboardConfig[e.key]
 
         if(mappedButton === undefined) {
             return
