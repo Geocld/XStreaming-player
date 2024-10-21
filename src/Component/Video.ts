@@ -50,6 +50,10 @@ export default class VideoComponent {
             videoRender.playsInline = true
             // videoHolder.style.aspectRatio = '16 / 9'
 
+            setInterval(() => {
+                videoRender.play()
+            }, 10)
+
             videoRender.addEventListener('loadedmetadata', () => {
                 const videoWidth = videoRender.videoWidth
                 const videoHeight = videoRender.videoHeight
