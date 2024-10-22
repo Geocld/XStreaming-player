@@ -52,7 +52,7 @@ export default class VideoComponent {
 
             setInterval(() => {
                 videoRender.play()
-            }, 10)
+            }, 4)
 
             videoRender.addEventListener('loadedmetadata', () => {
                 const videoWidth = videoRender.videoWidth
