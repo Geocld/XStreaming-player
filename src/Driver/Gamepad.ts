@@ -211,6 +211,18 @@ export default class GamepadDriver implements Driver {
     
             value = value - Math.sign(value) * this._application._gamepad_deadzone
             value /= (1.0 - this._application._gamepad_deadzone)
+
+            // Joystick edge compensation
+            const THRESHOLD = 0.8
+            const MAX_VALUE = 1
+            const compensation = this._application._edge_compensation / 100 || 0
+            if (Math.abs(value) > THRESHOLD) {
+                if (value > 0) {
+                    value = Math.min(value + compensation, MAX_VALUE)
+                } else {
+                    value = Math.max(value - compensation, -MAX_VALUE)
+                }
+            }
             
             return value
         } else {

@@ -107,6 +107,7 @@ export default class xStreamingPlayer {
     _gamepad_kernal = 'Native'
     _vibration_mode = 'Native'
     _gamepad_deadzone = 0.2
+    _edge_compensation = 0
     _custom_gamepad_mapping = null
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
