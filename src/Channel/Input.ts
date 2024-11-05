@@ -108,6 +108,16 @@ export default class InputChannel extends BaseChannel {
         // console.log('xStreamingPlayer Channel/Input.ts - ['+this._channelName+'] onOpen:', event)
     }
 
+    triggerRumble(gamepad: any, left: number, right: number) {
+        gamepad.vibrationActuator.playEffect('trigger-rumble', {
+            duration: 50,
+            leftTrigger: right,
+            rightTrigger: left,
+            strongMagnitude: 0,
+            weakMagnitude: 1,
+        })
+    }
+
     start(){
         const Packet = new InputPacket(this._inputSequenceNum)
         Packet.setMetadata(2)
@@ -125,6 +135,36 @@ export default class InputChannel extends BaseChannel {
                 this._adhocState = null
                 this.queueGamepadState(mergedState)
                 this._inputFps.count()
+
+                // Force gamepad trigger rumble
+                if (this._client._force_trigger_rumble !== '') {
+                    const gamepad = (navigator.getGamepads()[0] as any)
+                    if(gamepad && gamepad.vibrationActuator && gamepad.vibrationActuator.type === 'dual-rumble') {
+                        if (gamepad.vibrationActuator.effects && gamepad.vibrationActuator.effects.includes('trigger-rumble')) {
+                            if (this._client._force_trigger_rumble === 'all') {
+                                if (mergedState.LeftTrigger > 0.5) {
+                                    this.triggerRumble(gamepad, mergedState.LeftTrigger, 0)
+                                }
+
+                                if (mergedState.RightTrigger > 0.5) {
+                                    this.triggerRumble(gamepad, 0, mergedState.RightTrigger)
+                                }
+                            }
+
+                            if (this._client._force_trigger_rumble === 'left') {
+                                if (mergedState.LeftTrigger > 0.5) {
+                                    this.triggerRumble(gamepad, mergedState.LeftTrigger, 0)
+                                }
+                            }
+
+                            if (this._client._force_trigger_rumble === 'right') {
+                                if (mergedState.RightTrigger > 0.5) {
+                                    this.triggerRumble(gamepad, 0, mergedState.RightTrigger)
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             if(this._client._config.input_touch === true && Object.keys(this._touchEvents).length > 0){
@@ -228,7 +268,7 @@ export default class InputChannel extends BaseChannel {
 
             const rumbleData = {
                 startDelay: 0, // 振动效果开始之前延迟的时间，单位为毫秒。设置为0表示立即开始振动效果
-                duration: durationMs, // 振动效果持续的时间，单位为毫秒
+                duration: durationMs / 10, // 振动效果持续的时间，单位为毫秒
                 weakMagnitude: rightMotorPercent, //  弱振动的强度，范围通常在0到1之间。对应游戏手柄的右侧振动电机
                 strongMagnitude: leftMotorPercent, // 强振动的强度，范围通常在0到1之间。对应游戏手柄的左侧振动电机
 
@@ -274,21 +314,34 @@ export default class InputChannel extends BaseChannel {
                             clearInterval(this._rumbleInterval[gamepadIndex])
                         }
                         
-                        if(gamepad.vibrationActuator !== undefined) {
-
+                        if(gamepad.vibrationActuator) {
                             if(gamepad.vibrationActuator.type === 'dual-rumble') {
+                                
                                 const intensityRumble = rightMotorPercent < .6 ? (.6 - rightMotorPercent) / 2 : 0
                                 const intensityRumbleTriggers = (leftTriggerMotorPercent + rightTriggerMotorPercent) / 4
                                 const endIntensity = Math.min(intensityRumble, intensityRumbleTriggers)
                                 
                                 rumbleData.weakMagnitude = Math.min(1, rightMotorPercent + endIntensity)
 
-                                // Set triggers as we have changed the motor rumble already
-                                rumbleData.leftTrigger = 0
-                                rumbleData.rightTrigger = 0
-                            }
+                                if (gamepad.vibrationActuator.effects && gamepad.vibrationActuator.effects.includes('trigger-rumble')) {
+                                    if (rumbleData.leftTrigger > 0 || rumbleData.rightTrigger > 0) {
 
-                            gamepad.vibrationActuator?.playEffect(gamepad.vibrationActuator.type, rumbleData)
+                                        // Fix: chrome内核左右扳机逻辑相反
+                                        const temp = rumbleData.leftTrigger
+                                        rumbleData.leftTrigger = rumbleData.rightTrigger
+                                        rumbleData.rightTrigger = temp
+
+                                        // Optimize rumble duration
+                                        rumbleData.duration = rumbleData.duration / 2
+
+                                        gamepad.vibrationActuator?.playEffect('trigger-rumble', rumbleData)
+                                    } else if (rumbleData.weakMagnitude > 0 || rumbleData.strongMagnitude > 0) {
+                                        gamepad.vibrationActuator?.playEffect('dual-rumble', rumbleData)
+                                    }
+                                } else {
+                                    gamepad.vibrationActuator?.playEffect('dual-rumble', rumbleData)
+                                }
+                            }
 
                             if(repeat > 0) {
                                 let repeatCount = repeat

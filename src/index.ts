@@ -109,6 +109,7 @@ export default class xStreamingPlayer {
     _gamepad_deadzone = 0.2
     _edge_compensation = 0
     _custom_gamepad_mapping = null
+    _force_trigger_rumble = ''
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
         console.log('xStreamingPlayer loaded!')
@@ -316,6 +317,10 @@ export default class xStreamingPlayer {
 
     setGamepadMaping(maping: any) {
         this._custom_gamepad_mapping = maping
+    }
+    
+    setForceTriggerRumble(value: string) {
+        this._force_trigger_rumble = value
     }
 
     _setCodec(sdp: string, mimeType:string, codecProfiles:Array<any>){
