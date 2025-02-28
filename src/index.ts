@@ -110,6 +110,7 @@ export default class xStreamingPlayer {
     _edge_compensation = 0
     _custom_gamepad_mapping = null
     _force_trigger_rumble = ''
+    _gamepad_index = -1
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
         console.log('xStreamingPlayer loaded!')

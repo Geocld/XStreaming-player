@@ -190,14 +190,24 @@ export default class GamepadDriver implements Driver {
     requestStates():Array<InputFrame> {
         const states:Array<InputFrame> = []
         const gamepads = navigator.getGamepads()
-            
-        for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
-            const gamepadState = gamepads[gamepad]
 
+        if (this._application?._gamepad_index && this._application?._gamepad_index > -1) {
+            const gamepadState = gamepads[this._application._gamepad_index]
+    
             if (gamepadState !== null && gamepadState.connected) {
                 const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
                 state.GamepadIndex = gamepadState.index
                 states.push(state)
+            }
+        } else {
+            for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
+                const gamepadState = gamepads[gamepad]
+    
+                if (gamepadState !== null && gamepadState.connected) {
+                    const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
+                    state.GamepadIndex = gamepadState.index
+                    states.push(state)
+                }
             }
         }
         return states
