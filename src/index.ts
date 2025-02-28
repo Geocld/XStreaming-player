@@ -303,6 +303,10 @@ export default class xStreamingPlayer {
         this._gamepad_kernal = kernal
     }
 
+    setGamepadIndex(idx: number) {
+        this._gamepad_index = idx
+    }
+
     setVibration(isVibrated: boolean) {
         this._vibration = isVibrated
     }
