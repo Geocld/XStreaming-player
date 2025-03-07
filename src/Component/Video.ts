@@ -96,9 +96,9 @@ export default class VideoComponent {
             window.addEventListener('keydown', (e) => { this._client.getChannelProcessor('input')?.onKeyDown(e) }) 
             window.addEventListener('keyup', (e) => { this._client.getChannelProcessor('input')?.onKeyUp(e) })
 
-            // videoHolder.addEventListener("touchmove", (e) => this._client.getChannelProcessor('input').onPointerMove(e)),
-            // videoHolder.addEventListener("touchstart", (e) => this._client.getChannelProcessor('input').onPointerClick(e)),
-            // videoHolder.addEventListener("touchend", (e) => this._client.getChannelProcessor('input').onPointerClick(e)),
+            // videoHolder.addEventListener('touchmove', (e) => this._client.getChannelProcessor('input')?.onPointerMove(e)),
+            // videoHolder.addEventListener('touchstart', (e) => this._client.getChannelProcessor('input')?.onPointerClick(e)),
+            // videoHolder.addEventListener('touchend', (e) => this._client.getChannelProcessor('input')?.onPointerClick(e)),
             
             videoRender.play().then(() => {
                 //
