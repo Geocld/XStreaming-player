@@ -18,11 +18,7 @@ export default class ControlChannel extends BaseChannel {
         this._client._inputDriver.start()
         this._client._keyboardDriver.start()
 
-        this.sendGamepadRemoved(0)
-
-        setTimeout(() => {
-            this.sendGamepadAdded(0)
-        }, 500)
+        this.sendGamepadAdded(0)
     }
 
     sendGamepadAdded(gamepadIndex) {

@@ -487,6 +487,12 @@ export default class xStreamingPlayer {
                 continue
             }
 
+            const hasInvalidTcpType = iceDetails[candidate].candidate.includes('UDP') && iceDetails[candidate].candidate.includes('tcptype');
+            if (hasInvalidTcpType) {
+                console.warn('Skipping invalid candidate:', iceDetails[candidate])
+                continue
+            }
+
             this._webrtcClient?.addIceCandidate({
                 candidate: iceDetails[candidate].candidate,
                 sdpMid: iceDetails[candidate].sdpMid,
