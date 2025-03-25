@@ -131,7 +131,25 @@ export default class KeyboardDriver {
             return
         }
 
-        this._keyboardState[mappedButton] = val
+        if (mappedButton === 'LeftThumbXAxisPlus') {
+            this._keyboardState.LeftThumbXAxis = -val
+        } else if (mappedButton === 'LeftThumbXAxisMinus') {
+            this._keyboardState.LeftThumbXAxis = val
+        } else if (mappedButton === 'LeftThumbYAxisPlus') {
+            this._keyboardState.LeftThumbYAxis = -val
+        } else if (mappedButton === 'LeftThumbYAxisMinus') {
+            this._keyboardState.LeftThumbYAxis = val
+        } else if (mappedButton === 'RightThumbXAxisPlus') {
+            this._keyboardState.RightThumbXAxis = -val
+        } else if (mappedButton === 'RightThumbXAxisMinus') {
+            this._keyboardState.RightThumbXAxis = val
+        } else if (mappedButton === 'RightThumbYAxisPlus') {
+            this._keyboardState.RightThumbYAxis = -val
+        } else if (mappedButton === 'RightThumbYAxisMinus') {
+            this._keyboardState.RightThumbYAxis = val
+        } else {
+            this._keyboardState[mappedButton] = val
+        }
     }
 
     requestState(): InputFrame {
