@@ -28,7 +28,7 @@ export default class MessageChannel extends BaseChannel {
             this.getClient().getChannelProcessor('input').start()
 
             const systemUis = this.getClient()._config.ui_systemui || [10, 19, 31, 27, 32, -41]
-            const systemVersion = this.getClient()._config.ui_version || [0, 2, 0]
+            const systemVersion = this.getClient()._config.ui_version || [0, 1, 0]
             const uiConfig = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
                 'version': systemVersion,
                 'systemUis': systemUis, // Xbox Windows app has [33], xCloud has [10,19,31,27,32,-41]
@@ -48,8 +48,7 @@ export default class MessageChannel extends BaseChannel {
             }))
             this.send(uiConfig)
 
-            // FIXME: Touch mode game dont support gamepad?
-            const clientConfig = JSON.stringify(this.generateMessage('/streaming/properties/clientappinstallidchanged', { 'clientAppInstallId': '66354ea190f8a47031fff981236fac55' }))
+            const clientConfig = JSON.stringify(this.generateMessage('/streaming/properties/clientappinstallidchanged', { 'clientAppInstallId': 'c11ddb2e-c7e3-4f02-a62b-fd5448e0b851' }))
             this.send(clientConfig)
 
             const orientationConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/orientationchanged', { 'orientation': 0 }))
@@ -57,11 +56,10 @@ export default class MessageChannel extends BaseChannel {
 
             const touchConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/touchinputenabledchanged', { 'touchInputEnabled': this.getClient()._config.input_touch }))
             this.send(touchConfig)
-            const deviceConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/clientdevicecapabilities', {
-                maxTouchBundleLayoutVersion: '3.4.1.0',
-                maxTouchBundleManifestVersion: '2.0.0.0',
-            }))
+
+            const deviceConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/clientdevicecapabilities', {}))
             this.send(deviceConfig)
+
             const dimensionsConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/dimensionschanged', {
                 'horizontal': 1920,
                 'vertical': 1080,
@@ -71,12 +69,9 @@ export default class MessageChannel extends BaseChannel {
                 'safeAreaTop': 0,
                 'safeAreaRight': 1920,
                 'safeAreaBottom': 1080,
-                'supportsCustomResolution': true,
+                'supportsCustomResolution':true,
             }))
             this.send(dimensionsConfig)
-
-            const touchMetaConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/touchBundleMetadataChanged', null))
-            this.send(touchMetaConfig)
         }
 
         this.getClient().getEventBus().emit('message', {
@@ -93,7 +88,7 @@ export default class MessageChannel extends BaseChannel {
     generateMessage(path, data) {
         return {
             'type': 'Message',
-            'content': (typeof data === 'object') ? JSON.stringify(data) : data,
+            'content': JSON.stringify(data),
             'id': '41f93d5a-900f-4d33-b7a1-2d4ca6747072',
             'target': path,
             'cv': '',
