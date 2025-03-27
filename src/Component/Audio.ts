@@ -16,6 +16,16 @@ export default class AudioComponent {
         console.log('xStreamingPlayer Component/Audio.ts - Create media element')
 
         const audioHolder = document.getElementById(this._client._elementHolder)
+
+        const audioCtx = new (window.AudioContext)()
+        const source = audioCtx.createMediaStreamSource(srcObject)
+        const gainNode = audioCtx.createGain()
+        source.connect(gainNode).connect(audioCtx.destination)
+        if (this._client._audio_volume) {
+            this._client._audio_volume = +this._client._audio_volume
+        }
+        gainNode.gain.value = this._client._audio_volume || 1.0
+
         if(audioHolder !== null){
             const audioRender = document.createElement('audio')
             audioRender.id = this.getElementId()

@@ -111,6 +111,7 @@ export default class xStreamingPlayer {
     _custom_gamepad_mapping = null
     _force_trigger_rumble = ''
     _gamepad_index = -1
+    _audio_volume = 1
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
         console.log('xStreamingPlayer loaded!')
@@ -305,6 +306,10 @@ export default class xStreamingPlayer {
 
     setGamepadIndex(idx: number) {
         this._gamepad_index = idx
+    }
+
+    setAudioVolume(value: number) {
+        this._audio_volume = value || 1.0
     }
 
     setVibration(isVibrated: boolean) {
