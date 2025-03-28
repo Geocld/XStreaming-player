@@ -26,6 +26,8 @@ export default class AudioComponent {
         }
         gainNode.gain.value = this._client._audio_volume || 1.0
 
+        this._client._audio_gain_node = gainNode
+
         if(audioHolder !== null){
             const audioRender = document.createElement('audio')
             audioRender.id = this.getElementId()

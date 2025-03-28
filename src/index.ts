@@ -112,6 +112,7 @@ export default class xStreamingPlayer {
     _force_trigger_rumble = ''
     _gamepad_index = -1
     _audio_volume = 1
+    _audio_gain_node: any = null
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
         console.log('xStreamingPlayer loaded!')
@@ -310,6 +311,10 @@ export default class xStreamingPlayer {
 
     setAudioVolume(value: number) {
         this._audio_volume = value || 1.0
+    }
+
+    setAudioVolumeDirect(value: number) {
+        this._audio_gain_node.gain.value = value
     }
 
     setVibration(isVibrated: boolean) {
