@@ -17,16 +17,18 @@ export default class AudioComponent {
 
         const audioHolder = document.getElementById(this._client._elementHolder)
 
-        const audioCtx = new (window.AudioContext)()
-        const source = audioCtx.createMediaStreamSource(srcObject)
-        const gainNode = audioCtx.createGain()
-        source.connect(gainNode).connect(audioCtx.destination)
-        if (this._client._audio_volume) {
-            this._client._audio_volume = +this._client._audio_volume
-        }
-        gainNode.gain.value = this._client._audio_volume || 1.0
+        if (this._client._enable_audio_control) {
+            const audioCtx = new (window.AudioContext)()
+            const source = audioCtx.createMediaStreamSource(srcObject)
+            const gainNode = audioCtx.createGain()
+            source.connect(gainNode).connect(audioCtx.destination)
+            if (this._client._audio_volume) {
+                this._client._audio_volume = +this._client._audio_volume
+            }
+            gainNode.gain.value = 1.0
 
-        this._client._audio_gain_node = gainNode
+            this._client._audio_gain_node = gainNode
+        }
 
         if(audioHolder !== null){
             const audioRender = document.createElement('audio')

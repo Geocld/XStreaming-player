@@ -112,6 +112,7 @@ export default class xStreamingPlayer {
     _force_trigger_rumble = ''
     _gamepad_index = -1
     _audio_volume = 1
+    _enable_audio_control = false
     _audio_gain_node: any = null
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
@@ -313,8 +314,14 @@ export default class xStreamingPlayer {
         this._audio_volume = value || 1.0
     }
 
+    setAudioControl(value: boolean) {
+        this._enable_audio_control = value
+    }
+
     setAudioVolumeDirect(value: number) {
-        this._audio_gain_node.gain.value = value
+        if (this._audio_gain_node && this._audio_gain_node.gain) {
+            this._audio_gain_node.gain.value = value
+        }
     }
 
     setVibration(isVibrated: boolean) {
