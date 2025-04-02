@@ -133,12 +133,13 @@ export default class InputChannel extends BaseChannel {
                 const kbState = this.getClient()._keyboardDriver.requestState()
                 const mergedState = this.mergeState(gpState[0], kbState, this._adhocState)
                 this._adhocState = null
-                this.queueGamepadState(mergedState)
+                // this.queueGamepadState(mergedState)
                 this._inputFps.count()
 
                 // Force gamepad trigger rumble
                 if (this._client._force_trigger_rumble !== '') {
-                    const gamepad = (navigator.getGamepads()[0] as any)
+                    const idx = this._client._gamepad_index > -1 ? this._client._gamepad_index : 0
+                    const gamepad = (navigator.getGamepads()[idx] as any)
                     if(gamepad && gamepad.vibrationActuator && gamepad.vibrationActuator.type === 'dual-rumble') {
                         if (gamepad.vibrationActuator.effects && gamepad.vibrationActuator.effects.includes('trigger-rumble')) {
                             if (this._client._force_trigger_rumble === 'all') {
@@ -187,12 +188,7 @@ export default class InputChannel extends BaseChannel {
                 this._inputSequenceNum++
                 const packet = new InputPacket(this._inputSequenceNum)
                 packet.setData(metadataQueue, gamepadQueue, pointerQueue, mouseQueue, keyboardQueue)
-                // console.log('Sending new format:', packet)
                 this._metadataFps.count()
-                
-                // if (gamepadQueue.length > 0) {
-                //     console.log('Input.ts gamepadQueue:', gamepadQueue)
-                // }
                 
                 this.send(packet.toBuffer())
             }

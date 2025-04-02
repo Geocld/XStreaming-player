@@ -187,6 +187,41 @@ export default class GamepadDriver implements Driver {
         setTimeout(() => { this.run() }, 1000 / 120)
     }
 
+    mergeState(gpState:InputFrame, kbState:InputFrame):InputFrame {
+        return {
+            GamepadIndex: gpState?.GamepadIndex ?? kbState.GamepadIndex,
+            A: Math.max(gpState?.A ?? 0, kbState.A),
+            B: Math.max(gpState?.B ?? 0, kbState.B),
+            X: Math.max(gpState?.X ?? 0, kbState.X),
+            Y: Math.max(gpState?.Y ?? 0, kbState.Y),
+            LeftShoulder: Math.max(gpState?.LeftShoulder ?? 0, kbState.LeftShoulder),
+            RightShoulder: Math.max(gpState?.RightShoulder ?? 0, kbState.RightShoulder),
+            LeftTrigger: Math.max(gpState?.LeftTrigger ?? 0, kbState.LeftTrigger),
+            RightTrigger: Math.max(gpState?.RightTrigger ?? 0, kbState.RightTrigger),
+            View: Math.max(gpState?.View ?? 0, kbState.View),
+            Menu: Math.max(gpState?.Menu ?? 0, kbState.Menu),
+            LeftThumb: Math.max(gpState?.LeftThumb ?? 0, kbState.LeftThumb),
+            RightThumb: Math.max(gpState?.RightThumb ?? 0, kbState.RightThumb),
+            DPadUp: Math.max(gpState?.DPadUp ?? 0, kbState.DPadUp),
+            DPadDown: Math.max(gpState?.DPadDown ?? 0, kbState.DPadDown),
+            DPadLeft: Math.max(gpState?.DPadLeft ?? 0, kbState.DPadLeft),
+            DPadRight: Math.max(gpState?.DPadRight ?? 0, kbState.DPadRight),
+            Nexus: Math.max(gpState?.Nexus ?? 0, kbState.Nexus),
+            LeftThumbXAxis: this.mergeAxix(gpState?.LeftThumbXAxis ?? 0, kbState.LeftThumbXAxis),
+            LeftThumbYAxis: this.mergeAxix(gpState?.LeftThumbYAxis ?? 0, kbState.LeftThumbYAxis),
+            RightThumbXAxis: this.mergeAxix(gpState?.RightThumbXAxis ?? 0, kbState.RightThumbXAxis),
+            RightThumbYAxis: this.mergeAxix(gpState?.RightThumbYAxis ?? 0, kbState.RightThumbYAxis),
+        } as InputFrame
+    }
+
+    mergeAxix(axis1: number, axis2: number){
+        if(Math.abs(axis1) > Math.abs(axis2)){
+            return axis1
+        }else{
+            return axis2
+        }
+    }
+
     requestStates():Array<InputFrame> {
         const states:Array<InputFrame> = []
         const gamepads = navigator.getGamepads()
@@ -195,8 +230,14 @@ export default class GamepadDriver implements Driver {
             const gamepadState = gamepads[this._application._gamepad_index]
     
             if (gamepadState !== null && gamepadState.connected) {
-                const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
+                let state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
                 state.GamepadIndex = gamepadState.index
+
+                if(this._application?._config.input_legacykeyboard === true) {
+                    const kbState = this._application?._keyboardDriver.requestState()
+                    state = this.mergeState(state, kbState)
+                }
+
                 states.push(state)
             }
         } else {
@@ -204,8 +245,15 @@ export default class GamepadDriver implements Driver {
                 const gamepadState = gamepads[gamepad]
     
                 if (gamepadState !== null && gamepadState.connected) {
-                    const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
+                    let state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
                     state.GamepadIndex = gamepadState.index
+
+                    // Merge keyboard state
+                    if(this._application?._config.input_legacykeyboard === true) {
+                        const kbState = this._application?._keyboardDriver.requestState()
+                        state = this.mergeState(state, kbState)
+                    }
+                    
                     states.push(state)
                 }
             }

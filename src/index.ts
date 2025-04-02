@@ -324,6 +324,10 @@ export default class xStreamingPlayer {
         }
     }
 
+    setKeyboardInput(enabled: boolean) {
+        this._config.input_legacykeyboard = enabled
+    }
+
     setVibration(isVibrated: boolean) {
         this._vibration = isVibrated
     }
