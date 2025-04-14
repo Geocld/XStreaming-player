@@ -133,7 +133,8 @@ export default class InputChannel extends BaseChannel {
                 const kbState = this.getClient()._keyboardDriver.requestState()
                 const mergedState = this.mergeState(gpState[0], kbState, this._adhocState)
                 this._adhocState = null
-                // this.queueGamepadState(mergedState)
+                this.queueGamepadState(mergedState)
+                
                 this._inputFps.count()
 
                 // Force gamepad trigger rumble
