@@ -74,6 +74,13 @@ export default class MessageChannel extends BaseChannel {
             this.send(dimensionsConfig)
         }
 
+        // Get xboxTitleId from message
+        if (event.data.includes('/titleinfo')) {
+            const content = JSON.parse(jsonMessage.content)
+            const xboxTitleId = parseInt(content.titleid, 16)
+            window._xboxTitleId = xboxTitleId
+        }
+
         this.getClient().getEventBus().emit('message', {
             ...jsonMessage,
         })
