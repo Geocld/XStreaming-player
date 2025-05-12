@@ -114,6 +114,7 @@ export default class xStreamingPlayer {
     _audio_volume = 1
     _enable_audio_control = false
     _audio_gain_node: any = null
+    _polling_rate = 250 // 手柄回报率
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
         console.log('xStreamingPlayer loaded!')
@@ -312,6 +313,10 @@ export default class xStreamingPlayer {
 
     setAudioVolume(value: number) {
         this._audio_volume = value || 1.0
+    }
+
+    setPollRate(value: number) {
+        this._polling_rate = value || 250
     }
 
     setAudioControl(value: boolean) {

@@ -184,7 +184,11 @@ export default class GamepadDriver implements Driver {
         }
 
         // requestAnimationFrame(() => { this.run() })
-        setTimeout(() => { this.run() }, 1000 / 120)
+        let pollingRate = 250
+        if (this._application?._polling_rate) {
+            pollingRate = this._application?._polling_rate
+        }
+        setTimeout(() => { this.run() }, 1000 / pollingRate)
     }
 
     mergeState(gpState:InputFrame, kbState:InputFrame):InputFrame {
