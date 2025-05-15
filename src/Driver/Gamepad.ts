@@ -249,6 +249,11 @@ export default class GamepadDriver implements Driver {
                 const gamepadState = gamepads[gamepad]
     
                 if (gamepadState !== null && gamepadState.connected) {
+                    // Skip virtual controller
+                    if (gamepadState.id && (gamepadState.id.indexOf('virtual') > -1 || gamepadState.id.indexOf('Virtual') > -1)) {
+                        continue
+                    }
+                    
                     let state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
                     state.GamepadIndex = gamepadState.index
 
