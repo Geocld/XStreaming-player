@@ -3,6 +3,9 @@ import FpsCounter from '../Helper/FpsCounter'
 
 globalThis.resolution = ''
 
+const INTERVAL_MS = 30000 // 30s
+let lastExecutionTime = 0
+
 export default class VideoComponent {
 
     _client:xStreamingPlayer
@@ -67,19 +70,26 @@ export default class VideoComponent {
             }
 
             const serverDataLoop = (t, i) => {
-                if (this._client.getChannelProcessor('input')) {
-                    videoRender.requestVideoFrameCallback(serverDataLoop)
-                    this._videoFps.count()
-
-                    this._client.getChannelProcessor('input').addProcessedFrame({
-                        serverDataKey: i.rtpTimestamp,
-                        firstFramePacketArrivalTimeMs: i.receiveTime,
-                        frameSubmittedTimeMs: i.receiveTime,
-                        frameDecodedTimeMs: i.expectedDisplayTime,
-                        frameRenderedTimeMs: i.expectedDisplayTime,
-                    })
+                videoRender.requestVideoFrameCallback(serverDataLoop)
+                
+                const currentTime = new Date().getTime()
+                
+                if (currentTime - lastExecutionTime >= INTERVAL_MS) {
+                    lastExecutionTime = currentTime
+                    
+                    if (this._client.getChannelProcessor('input')) {
+                        this._videoFps.count()
+                        this._client.getChannelProcessor('input').addProcessedFrame({
+                            serverDataKey: i.rtpTimestamp,
+                            firstFramePacketArrivalTimeMs: i.receiveTime,
+                            frameSubmittedTimeMs: i.receiveTime,
+                            frameDecodedTimeMs: i.expectedDisplayTime,
+                            frameRenderedTimeMs: i.expectedDisplayTime,
+                        })
+                    }
                 }
             }
+            
             videoRender.requestVideoFrameCallback(serverDataLoop)
             this._videoRender = videoRender
             

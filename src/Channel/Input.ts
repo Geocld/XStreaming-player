@@ -125,6 +125,11 @@ export default class InputChannel extends BaseChannel {
         this.send(Packet.toBuffer())
 
         this.getClient()._inputDriver.run()
+
+        let pollingRate = 250
+        if (this._client?._polling_rate) {
+            pollingRate = this._client?._polling_rate
+        }
         
         this._inputInterval = setInterval(() => {
             // Keyboard mask for legacy input
@@ -193,7 +198,7 @@ export default class InputChannel extends BaseChannel {
                 
                 this.send(packet.toBuffer())
             }
-        }, 4)// 16 ms = 1 frame (1000/60)
+        }, 1000 / pollingRate)// 16 ms = 1 frame (1000/60)
     }
 
     mergeState(gpState:InputFrame, kbState:InputFrame, adHoc:InputFrame):InputFrame{
