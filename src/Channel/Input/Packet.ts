@@ -200,44 +200,55 @@ export default class InputPacket {
             packet.setUint8(offset, shift.events.length)
             offset++
 
-            const screenWidth = 1920*2
-            const screenHeight = 1080*2
+            const targetWidth = 1920
+            const targetHeight = 1080
 
-            for(const event in shift.events){
-                const rect = shift.events[event].target.getBoundingClientRect()
+            for (const event in shift.events) {
+                const pointerEvent = shift.events[event]
+                const rect = pointerEvent.target.getBoundingClientRect()
 
-                let e = 0.06575749909301447 * (screenHeight / 1)
-                    , n = 0.06575749909301447 * (screenWidth / 1)
+                const elementRelativeX = (pointerEvent.x - rect.left) / rect.width
+                const elementRelativeY = (pointerEvent.y - rect.top) / rect.height
 
-                e=1, n=1
+                const mappedX = elementRelativeX * targetWidth
+                const mappedY = elementRelativeY * targetHeight
 
-                if(shift.events[event].type === 'pointerup'){
-                    e = 0
-                    n = 0
+                let tiltX = 0.06575749909301447 * (targetHeight / 1)
+                let tiltY = 0.06575749909301447 * (targetWidth / 1)
+
+                if (pointerEvent.type === 'pointerup') {
+                    tiltX = 0
+                    tiltY = 0
                 }
 
-                packet.setUint16(offset, e, true)
-                packet.setUint16(offset+2, n, true)
-                packet.setUint8(offset+4, 255*shift.events[event].pressure)
-                packet.setUint16(offset+5, shift.events[event].twist, true)
-                packet.setUint32(offset+7, 0, true)
-                let o = (shift.events[event].x - rect.left) * (screenWidth / rect.width)
-                    , l = (shift.events[event].y - rect.top) * (screenHeight / rect.height)
+                packet.setUint16(offset, tiltX, true)
+                packet.setUint16(offset + 2, tiltY, true)
+                packet.setUint8(offset + 4, 255 * pointerEvent.pressure)
+                packet.setUint16(offset + 5, pointerEvent.twist, true)
+                packet.setUint32(offset + 7, 0, true)
 
-                if(shift.events[event].type === 'pointerup'){
-                    // Reset x and y to 0 on pointerup
-                    o = 0
-                    l = 0
+                let finalX = mappedX
+                let finalY = mappedY
+
+                if (pointerEvent.type === 'pointerup') {
+                    finalX = 0
+                    finalY = 0
                 }
 
-                packet.setUint32(offset+11, o, true)
-                packet.setUint32(offset+15, l, true)
-                packet.setUint8(offset+19, (shift.events[event].type === 'pointerdown') ? 1 :
-                    (shift.events[event].type === 'pointerup') ? 2 : (shift.events[event].type === 'pointermove') ? 3 : 0)
-                    
-                offset = offset+20
+                packet.setUint32(offset + 11, finalX, true)
+                packet.setUint32(offset + 15, finalY, true)
+                packet.setUint8(
+                    offset + 19,
+                    pointerEvent.type === 'pointerdown'
+                        ? 1
+                        : pointerEvent.type === 'pointerup'
+                            ? 2
+                            : pointerEvent.type === 'pointermove'
+                                ? 3
+                                : 0,
+                )
 
-                // console.log('Sending event: ', shift.events[event], pointer, e, n, o, l, rect)
+                offset = offset + 20
             }
         }
         // }

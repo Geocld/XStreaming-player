@@ -28,7 +28,7 @@ export default class MessageChannel extends BaseChannel {
             this.getClient().getChannelProcessor('input').start()
 
             const systemUis = this.getClient()._config.ui_systemui || [10, 19, 31, 27, 32, -41]
-            const systemVersion = this.getClient()._config.ui_version || [0, 1, 0]
+            const systemVersion = this.getClient()._config.ui_version || [0, 2, 0]
             const uiConfig = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
                 'version': systemVersion,
                 'systemUis': systemUis, // Xbox Windows app has [33], xCloud has [10,19,31,27,32,-41]

@@ -115,6 +115,7 @@ export default class xStreamingPlayer {
     _enable_audio_control = false
     _audio_gain_node: any = null
     _polling_rate = 250 // 手柄回报率
+    _mouse_sensitive = 0.5 // 鼠标灵敏度
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
         console.log('xStreamingPlayer loaded!')
@@ -335,6 +336,10 @@ export default class xStreamingPlayer {
 
     setVibration(isVibrated: boolean) {
         this._vibration = isVibrated
+    }
+
+    setMouseSensitive(value: number) {
+        this._mouse_sensitive = value
     }
 
     setVibrationMode(mode: string) {

@@ -436,8 +436,8 @@ export default class InputChannel extends BaseChannel {
             this._mouseStateButtons = e.buttons
 
             this._mouseFrames.push({
-                X: this._mouseStateX*10,
-                Y: this._mouseStateY*10,
+                X: this._mouseStateX * this._client._mouse_sensitive,
+                Y: this._mouseStateY * this._client._mouse_sensitive,
                 WheelX: 0,
                 WheelY: 0,
                 Buttons: this._mouseStateButtons,
@@ -518,8 +518,8 @@ export default class InputChannel extends BaseChannel {
             this._mouseStateButtons = e.buttons
 
             this._mouseFrames.push({
-                X: this._mouseStateX*10,
-                Y: this._mouseStateY*10,
+                X: this._mouseStateX * this._client._mouse_sensitive,
+                Y: this._mouseStateY * this._client._mouse_sensitive,
                 WheelX: 0,
                 WheelY: 0,
                 Buttons: this._mouseStateButtons,
