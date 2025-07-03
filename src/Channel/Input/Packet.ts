@@ -230,6 +230,20 @@ export default class InputPacket {
                 let finalX = mappedX
                 let finalY = mappedY
 
+                // 移动端补偿?
+                if (window.ReactNativeWebView) {
+                    const center = targetWidth / 2
+                    if (mappedX < center) {
+                        finalX -= 50
+                    } else if (mappedX > center) { // right
+                        if (mappedX - center > 80) {
+                            finalX += 80
+                        }
+                    }
+
+                    finalY = mappedY - 10
+                }
+
                 if (pointerEvent.type === 'pointerup') {
                     finalX = 0
                     finalY = 0
