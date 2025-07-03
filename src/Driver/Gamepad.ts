@@ -230,12 +230,12 @@ export default class GamepadDriver implements Driver {
         const states:Array<InputFrame> = []
         const gamepads = navigator.getGamepads()
 
-        if (this._application?._gamepad_index && this._application?._gamepad_index > -1) {
+        if (this._application?._gamepad_index !== undefined && this._application?._gamepad_index > -1) {
             const gamepadState = gamepads[this._application._gamepad_index]
     
             if (gamepadState !== null && gamepadState.connected) {
                 let state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
-                state.GamepadIndex = gamepadState.index
+                state.GamepadIndex = 0
 
                 if(this._application?._config.input_legacykeyboard === true) {
                     const kbState = this._application?._keyboardDriver.requestState()
@@ -250,12 +250,12 @@ export default class GamepadDriver implements Driver {
     
                 if (gamepadState !== null && gamepadState.connected) {
                     // Skip virtual controller
-                    if (gamepadState.id && (gamepadState.id.indexOf('virtual') > -1 || gamepadState.id.indexOf('Virtual') > -1)) {
+                    if (gamepadState.id && (gamepadState.id.indexOf('virtual') > -1 || gamepadState.id.indexOf('Virtual') > -1) && gamepadState.axes.length !== 4) {
                         continue
                     }
                     
                     let state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
-                    state.GamepadIndex = gamepadState.index
+                    state.GamepadIndex = 0
 
                     // Merge keyboard state
                     if(this._application?._config.input_legacykeyboard === true) {
