@@ -34,7 +34,7 @@ export default class xStreamingPlayer {
 
     _isResetting = false
 
-    _webrtcConfiguration = {
+    _webrtcConfiguration: any = {
         iceServers: [
             {
                 urls: 'stun:worldaz.relay.teams.microsoft.com:3478',
@@ -131,8 +131,17 @@ export default class xStreamingPlayer {
         this._elementHolderRandom = (Math.floor(Math.random() * 100) + 1)
     }
 
-    bind(){
+    bind(params?: any) {
+        if (params && params.turnServer) {
+            this._webrtcConfiguration.iceServers.push({
+                urls: params.turnServer.url,
+                username: params.turnServer.username,
+                credential: params.turnServer.credential,
+            })
+        }
+        console.log('Init peerconnection:', this._webrtcConfiguration)
         this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration)
+        
         this._openDataChannels()
 
         if(this._config.input_driver === undefined){
