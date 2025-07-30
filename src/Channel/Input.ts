@@ -527,15 +527,17 @@ export default class InputChannel extends BaseChannel {
             })
         }
 
-        if(this._touchActive === true){
-            this._touchLastPointerId = e.pointerId
-            if(this._touchEvents[e.pointerId] === undefined){
-                this._touchEvents[e.pointerId] = {
-                    events: [],
+        setTimeout(() => {
+            if(this._touchActive === true){
+                this._touchLastPointerId = e.pointerId
+                if(this._touchEvents[e.pointerId] === undefined){
+                    this._touchEvents[e.pointerId] = {
+                        events: [],
+                    }
                 }
+                this._touchEvents[e.pointerId].events.push(e)
             }
-            this._touchEvents[e.pointerId].events.push(e)
-        }
+        }, 32)
     }
 
     onPointerScroll(e){
