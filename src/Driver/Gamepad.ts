@@ -120,6 +120,11 @@ export default class GamepadDriver implements Driver {
         }
     }
 
+    setGamepadState(state: any) {
+        this._shadowGamepad = state
+        this._application?.getChannelProcessor('input').queueGamepadState(this._shadowGamepad)
+    }
+
     pressButtonStart(button:string) {
         console.log('pressButtonStart:', button)
         this._isVirtualButtonPressing = true

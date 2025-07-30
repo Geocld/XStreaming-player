@@ -643,6 +643,10 @@ export default class InputChannel extends BaseChannel {
         return n > t ? t : n < a ? a : this._convertToInt16(n)
     }
 
+    setGamepadState(state: any) {
+        this._client._inputDriver.setGamepadState(state)
+    }
+
     pressButtonStart(button:string){
         this._isVirtualButtonPressing = true
         this._client._inputDriver.pressButtonStart(button)
