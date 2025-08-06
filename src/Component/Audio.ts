@@ -28,21 +28,31 @@ export default class AudioComponent {
             gainNode.gain.value = 1.0
 
             this._client._audio_gain_node = gainNode
-        }
 
-        if(audioHolder !== null){
-            const audioRender = document.createElement('audio')
-            audioRender.id = this.getElementId()
-            audioRender.srcObject = srcObject
-            // audioRender.play()
-
-            audioRender.autoplay = true
-
-            this._audioRender = audioRender
-            
-            audioHolder.appendChild(audioRender)
+            if(audioHolder !== null){
+                const audioRender = document.createElement('audio')
+                audioRender.id = this.getElementId()
+                audioRender.srcObject = srcObject
+                audioRender.muted = true // 关键：设置为静音，避免重复播放
+                audioRender.autoplay = true
+                this._audioRender = audioRender
+                audioHolder.appendChild(audioRender)
+            }
         } else {
-            console.log('xStreamingPlayer Component/Audio.ts - Error fetching audioholder: div#'+this._client._elementHolder)
+            if(audioHolder !== null){
+                const audioRender = document.createElement('audio')
+                audioRender.id = this.getElementId()
+                audioRender.srcObject = srcObject
+                // audioRender.play()
+
+                audioRender.autoplay = true
+
+                this._audioRender = audioRender
+                
+                audioHolder.appendChild(audioRender)
+            } else {
+                console.log('xStreamingPlayer Component/Audio.ts - Error fetching audioholder: div#'+this._client._elementHolder)
+            }
         }
 
         console.log('xStreamingPlayer Component/Audio.ts - Media element created')

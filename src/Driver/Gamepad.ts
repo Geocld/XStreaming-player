@@ -198,7 +198,7 @@ export default class GamepadDriver implements Driver {
 
     mergeState(gpState:InputFrame, kbState:InputFrame):InputFrame {
         return {
-            GamepadIndex: gpState?.GamepadIndex ?? kbState.GamepadIndex,
+            GamepadIndex: 0,
             A: Math.max(gpState?.A ?? 0, kbState.A),
             B: Math.max(gpState?.B ?? 0, kbState.B),
             X: Math.max(gpState?.X ?? 0, kbState.X),

@@ -203,7 +203,7 @@ export default class InputChannel extends BaseChannel {
 
     mergeState(gpState:InputFrame, kbState:InputFrame, adHoc:InputFrame):InputFrame{
         return {
-            GamepadIndex: gpState?.GamepadIndex ?? kbState.GamepadIndex,
+            GamepadIndex: 0,
             A: Math.max(gpState?.A ?? 0, kbState.A, adHoc?.A ?? 0),
             B: Math.max(gpState?.B ?? 0, kbState.B, adHoc?.B ?? 0),
             X: Math.max(gpState?.X ?? 0, kbState.X, adHoc?.X ?? 0),
