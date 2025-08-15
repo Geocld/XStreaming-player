@@ -467,6 +467,13 @@ export default class xStreamingPlayer {
         this.getEventBus().emit('connectionstate', { state: 'connecting'})
     }
 
+    startFRS() {
+        if(this._videoComponent) {
+            console.log('startFSR')
+            this._videoComponent.startFSR()
+        }
+    }
+
     reset(){
         if(!this._isResetting){
             this._isResetting = true

@@ -5,5 +5,6 @@ declare global {
     ReactNativeWebView: any;
     __streamSettings: any;
     _xboxTitleId: any;
+    ImageShader: any;
   }
 }

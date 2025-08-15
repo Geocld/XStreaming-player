@@ -1,4 +1,5 @@
 import xStreamingPlayer from '..'
+import { WebGL2Player } from '../Fsr/WebGL2Player'
 import FpsCounter from '../Helper/FpsCounter'
 
 globalThis.resolution = ''
@@ -18,9 +19,12 @@ export default class VideoComponent {
     _framekeyInterval
 
     _videoFps
+    _video
+    _canvasPlayer
 
     constructor(client:xStreamingPlayer) {
         this._client = client
+        this._video = null
     }
 
     create(srcObject) {
@@ -115,6 +119,8 @@ export default class VideoComponent {
             }).catch((error) => {
                 console.log('xStreamingPlayer Component/Video.ts - Error executing play() on videoRender:', error)
             })
+
+            this._video = videoRender
         } else {
             console.log('xStreamingPlayer Component/Video.ts - Error fetching videoholder: div#'+this._client._elementHolder)
         }
@@ -128,6 +134,30 @@ export default class VideoComponent {
 
     getSource() {
         return this._videoSource
+    }
+
+    startFSR() {
+        if (!this._video || !window.ImageShader) {
+            return
+        }
+
+        const vidFilter = new window.ImageShader()
+        this._video.after(vidFilter.canvas)
+
+        vidFilter.canvas.width = this._video.videoWidth
+        vidFilter.canvas.height = this._video.videoHeight
+        
+        
+        // this._canvasPlayer = new WebGL2Player(this._video)
+        // this._canvasPlayer.init()
+
+        const draw = () => {
+            requestAnimationFrame(draw)
+        
+            vidFilter.setImage(this._video)
+            vidFilter.render()
+        }
+        draw()
     }
 
     createMediaSource() {
@@ -158,7 +188,12 @@ export default class VideoComponent {
             this._videoRender.remove()
         }
 
-        this._videoFps.stop()
+        this._videoFps && this._videoFps.stop()
+
+        if (this._canvasPlayer) {
+            this._canvasPlayer.destroy()
+            this._canvasPlayer = null
+        }
 
         delete this._mediaSource
         delete this._videoRender
