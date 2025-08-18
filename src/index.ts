@@ -670,6 +670,7 @@ export default class xStreamingPlayer {
                 fps: 0,
                 pl: '-1 (-1%)',
                 fl: '-1 (-1%)',
+                jit: '-1',
                 br: '',
                 decode: '',
             }
@@ -711,6 +712,15 @@ export default class xStreamingPlayer {
                                     } else {
                                         performances.br = '--'
                                     }
+
+                                    // Jitter
+                                    const bufferDelayDiff = (stat as RTCInboundRtpStreamStats).jitterBufferDelay! - lastStat.jitterBufferDelay!
+                                    const emittedCountDiff = (stat as RTCInboundRtpStreamStats).jitterBufferEmittedCount! - lastStat.jitterBufferEmittedCount!
+                                    if (emittedCountDiff > 0) {
+                                        performances.jit = Math.round(bufferDelayDiff / emittedCountDiff * 1000) + 'ms'
+                                    } else {
+                                        performances.jit = '--'
+                                    }
                                     
         
                                     // Decode time
@@ -740,6 +750,7 @@ export default class xStreamingPlayer {
                                     console.log('err:', e)
                                 }
                             }
+
                             globalThis._lastStat = stat
                         } else if (stat.type === 'candidate-pair' && stat.state === 'succeeded') {
                             // Round Trip Time
