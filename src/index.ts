@@ -33,6 +33,7 @@ export default class xStreamingPlayer {
     _eventBus:EventBus
 
     _isResetting = false
+    _isFSR = false
 
     _webrtcConfiguration: any = {
         iceServers: [
@@ -116,6 +117,7 @@ export default class xStreamingPlayer {
     _audio_gain_node: any = null
     _polling_rate = 250 // 手柄回报率
     _mouse_sensitive = 0.5 // 鼠标灵敏度
+    _fsr_sharpness = 2 // FSR锐化等级 1-10
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
         console.log('xStreamingPlayer loaded!')
@@ -351,6 +353,10 @@ export default class xStreamingPlayer {
         this._mouse_sensitive = value
     }
 
+    setFsrSharpness(value: number) {
+        this._fsr_sharpness = value
+    }
+
     setVibrationMode(mode: string) {
         this._vibration_mode = mode
     }
@@ -467,10 +473,16 @@ export default class xStreamingPlayer {
         this.getEventBus().emit('connectionstate', { state: 'connecting'})
     }
 
-    startFRS() {
-        if(this._videoComponent) {
+    startFSR(cb) {
+        if(this._videoComponent && !this._isFSR) {
             console.log('startFSR')
-            this._videoComponent.startFSR()
+            try {
+                this._videoComponent.startFSR()
+                this._isFSR = true
+                cb && cb()
+            } catch(e) {
+                console.log('FSR failed.')
+            }
         }
     }
 

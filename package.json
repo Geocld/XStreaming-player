@@ -1,6 +1,6 @@
 {
   "name": "xstreaming-player",
-  "version": "0.2.21",
+  "version": "0.2.22",
   "description": "Player component for XStreaming. Base on xCloudPlayer.",
   "main": "dist/index.js",
   "scripts": {
@@ -34,5 +34,8 @@
     "typescript": "^5.3.3",
     "webpack": "^5.52.1",
     "webpack-cli": "^5.0.1"
+  },
+  "dependencies": {
+    "three": "0.150.1"
   }
 }
