@@ -612,6 +612,15 @@ export default class VideoComponent {
                 width = this._video.clientWidth > this._video.videoWidth ? this._video.videoWidth : this._video.clientWidth
                 height = width / aspect
             }
+
+            // 如果计算出来的width大于window实际宽度，以window宽度为准，重新计算height
+            if (width > window.innerWidth) {
+                width = window.innerWidth
+                height = width / aspect
+            } else if (width === this._video.videoWidth && width < window.innerWidth) {
+                width = window.innerWidth
+                height = width / aspect
+            }
         }
         
         // camera
@@ -710,6 +719,15 @@ export default class VideoComponent {
                     width = height * aspect
                 } else {
                     width = this._video.clientWidth > this._video.videoWidth ? this._video.videoWidth : this._video.clientWidth
+                    height = width / aspect
+                }
+
+                // 如果计算出来的width大于window实际宽度，以window宽度为准，重新计算height
+                if (width > window.innerWidth) {
+                    width = window.innerWidth
+                    height = width / aspect
+                } else if (width === this._video.videoWidth && width < window.innerWidth) {
+                    width = window.innerWidth
                     height = width / aspect
                 }
             }
