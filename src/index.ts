@@ -111,6 +111,7 @@ export default class xStreamingPlayer {
     _edge_compensation = 0
     _custom_gamepad_mapping = null
     _force_trigger_rumble = ''
+    _gamepad_mix = false
     _gamepad_index = -1
     _audio_volume = 1
     _enable_audio_control = false
@@ -323,6 +324,10 @@ export default class xStreamingPlayer {
         this._gamepad_index = idx
     }
 
+    setGamepadMix(value: boolean) {
+        this._gamepad_mix = value
+    }
+
     setAudioVolume(value: number) {
         this._audio_volume = value || 1.0
     }
@@ -355,6 +360,12 @@ export default class xStreamingPlayer {
 
     setFsrSharpness(value: number) {
         this._fsr_sharpness = value
+    }
+
+    setFsrSharpnessDynamic(value: number) {
+        if(this._videoComponent) {
+            this._videoComponent.setFsrSharpnessDynamic(value)
+        }
     }
 
     setVibrationMode(mode: string) {

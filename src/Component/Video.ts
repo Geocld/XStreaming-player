@@ -458,10 +458,12 @@ export default class VideoComponent {
     _videoFps
     _video
     _canvasPlayer
+    _rcasMaterial
 
     constructor(client:xStreamingPlayer) {
         this._client = client
         this._video = null
+        this._rcasMaterial = null
     }
 
     create(srcObject) {
@@ -674,7 +676,7 @@ export default class VideoComponent {
 
         // RCAS stage setting
         const rcasScene = new THREE.Scene()
-        const rcasMaterial = new THREE.ShaderMaterial({
+        this._rcasMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 iChannel0: {
                     value: videoTexture,
@@ -694,7 +696,7 @@ export default class VideoComponent {
             fragmentShader: rcasFragmentShader,
             glslVersion: THREE.GLSL3,
         })
-        const rcasMesh = new THREE.Mesh(geometry.clone(), rcasMaterial)
+        const rcasMesh = new THREE.Mesh(geometry.clone(), this._rcasMaterial)
         rcasScene.add(rcasMesh)
 
         // tick
@@ -743,9 +745,15 @@ export default class VideoComponent {
 
             // update uniforms
             easuMaterial.uniforms['iResolution'].value = new THREE.Vector2(width * dpr, height * dpr)
-            rcasMaterial.uniforms['iResolution'].value = new THREE.Vector2(width * dpr, height * dpr)
+            this._rcasMaterial.uniforms['iResolution'].value = new THREE.Vector2(width * dpr, height * dpr)
         })
         resizeObserver.observe(document.body)
+    }
+
+    setFsrSharpnessDynamic(value: number) {
+        if (this._rcasMaterial) {
+            this._rcasMaterial.uniforms['sharpness'].value = value / 10
+        }
     }
 
     createMediaSource() {

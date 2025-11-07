@@ -249,6 +249,38 @@ export default class GamepadDriver implements Driver {
 
                 states.push(state)
             }
+        } else if (this._application?._gamepad_mix) { // 手柄混合输入
+            let mergedGamepadState
+
+            for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
+                const gamepadState = gamepads[gamepad]
+                if (gamepadState !== null && gamepadState.connected) {
+
+                    if (gamepadState.id && 
+                    (gamepadState.id.indexOf('virtual') > -1 || 
+                     gamepadState.id.indexOf('Virtual') > -1) && 
+                    gamepadState.axes.length !== 4) {
+                        continue
+                    }
+
+                    const currentState = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
+                    if (mergedGamepadState === null) {
+                        mergedGamepadState = currentState
+                        mergedGamepadState.GamepadIndex = 0
+                    } else {
+                        // Merge with existing gamepad state
+                        mergedGamepadState = this.mergeState(mergedGamepadState, currentState)
+                    }
+                }
+            }
+
+            // Merge keyboard state
+            if(this._application?._config.input_legacykeyboard === true) {
+                const kbState = this._application?._keyboardDriver.requestState()
+                mergedGamepadState = this.mergeState(mergedGamepadState ? mergedGamepadState : {}, kbState)
+            }
+
+            states.push(mergedGamepadState!)
         } else {
             for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
                 const gamepadState = gamepads[gamepad]
