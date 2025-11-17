@@ -607,22 +607,24 @@ export default class VideoComponent {
             width = this._video.clientWidth
             height = this._video.clientHeight
         } else {
-            if (this._video.clientWidth > this._video.clientHeight) {
-                height = this._video.clientHeight > this._video.videoHeight ? this._video.videoHeight : this._video.clientHeight
-                width = height * aspect
+            const videoRect = this._video.getBoundingClientRect()
+            const videoAspectRatio = this._video.videoWidth / this._video.videoHeight
+            const containerAspectRatio = videoRect.width / videoRect.height
+            
+            let displayWidth, displayHeight
+            
+            if (videoAspectRatio > containerAspectRatio) {
+                // 视频更宽，上下有黑边
+                displayWidth = videoRect.width
+                displayHeight = videoRect.width / videoAspectRatio
             } else {
-                width = this._video.clientWidth > this._video.videoWidth ? this._video.videoWidth : this._video.clientWidth
-                height = width / aspect
+                // 视频更高，左右有黑边
+                displayWidth = videoRect.height * videoAspectRatio
+                displayHeight = videoRect.height
             }
 
-            // 如果计算出来的width大于window实际宽度，以window宽度为准，重新计算height
-            if (width > window.innerWidth) {
-                width = window.innerWidth
-                height = width / aspect
-            } else if (width === this._video.videoWidth && width < window.innerWidth) {
-                width = window.innerWidth
-                height = width / aspect
-            }
+            width = displayWidth
+            height = displayHeight
         }
         
         // camera
@@ -716,22 +718,24 @@ export default class VideoComponent {
                 width = this._video.clientWidth
                 height = this._video.clientHeight
             } else {
-                if (this._video.clientWidth > this._video.clientHeight) {
-                    height = this._video.clientHeight > this._video.videoHeight ? this._video.videoHeight : this._video.clientHeight
-                    width = height * aspect
+                const videoRect = this._video.getBoundingClientRect()
+                const videoAspectRatio = this._video.videoWidth / this._video.videoHeight
+                const containerAspectRatio = videoRect.width / videoRect.height
+                
+                let displayWidth, displayHeight
+                
+                if (videoAspectRatio > containerAspectRatio) {
+                    // 视频更宽，上下有黑边
+                    displayWidth = videoRect.width
+                    displayHeight = videoRect.width / videoAspectRatio
                 } else {
-                    width = this._video.clientWidth > this._video.videoWidth ? this._video.videoWidth : this._video.clientWidth
-                    height = width / aspect
+                    // 视频更高，左右有黑边
+                    displayWidth = videoRect.height * videoAspectRatio
+                    displayHeight = videoRect.height
                 }
 
-                // 如果计算出来的width大于window实际宽度，以window宽度为准，重新计算height
-                if (width > window.innerWidth) {
-                    width = window.innerWidth
-                    height = width / aspect
-                } else if (width === this._video.videoWidth && width < window.innerWidth) {
-                    width = window.innerWidth
-                    height = width / aspect
-                }
+                width = displayWidth
+                height = displayHeight
             }
 
             const dpr = window.devicePixelRatio || 1
