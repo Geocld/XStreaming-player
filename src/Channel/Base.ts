@@ -10,6 +10,8 @@ export default class BaseChannel {
         'state': [],
     }
 
+    _keyframeInterval: any
+
     constructor(channelName:string, client:xStreamingPlayer) {
         this._channelName = channelName
         this._client = client

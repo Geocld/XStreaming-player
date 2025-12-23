@@ -23,6 +23,10 @@ export default class ControlChannel extends BaseChannel {
         setTimeout(() => {
             this.sendGamepadAdded(0)
         }, 500)
+
+        this._keyframeInterval = setInterval(() => {
+            this.requestKeyframeRequest()
+        }, 5 * 1000)
     }
 
     sendGamepadAdded(gamepadIndex) {
@@ -56,6 +60,8 @@ export default class ControlChannel extends BaseChannel {
 
         this._client._inputDriver.stop()
         this._client._keyboardDriver.stop()
+
+        this._keyframeInterval && clearInterval(this._keyframeInterval)
     }
 
     requestKeyframeRequest() {
