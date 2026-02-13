@@ -115,6 +115,8 @@ export default class xStreamingPlayer {
     _gamepad_index = -1
     _audio_volume = 1
     _enable_audio_control = false
+    _enable_audio_rumble = false
+    _audio_rumble_threshold = 0.15
     _audio_gain_node: any = null
     _polling_rate = 250 // 手柄回报率
     _mouse_sensitive = 0.5 // 鼠标灵敏度
@@ -383,6 +385,13 @@ export default class xStreamingPlayer {
     
     setForceTriggerRumble(value: string) {
         this._force_trigger_rumble = value
+    }
+
+    setAudioRumble(enaled: boolean, threshold?: number) {
+        this._enable_audio_rumble = enaled
+        if(threshold) {
+            this._audio_rumble_threshold = threshold
+        }
     }
 
     _setCodec(sdp: string, mimeType:string, codecProfiles:Array<any>){

@@ -1,5 +1,17 @@
 import xStreamingPlayer from '..'
 
+function getVolume(analyser: AnalyserNode, dataArray: any) {
+    analyser.getByteTimeDomainData(dataArray)
+
+    let sumSquares = 0
+    for (let i = 0; i < dataArray.length; i++) {
+        const normalized = (dataArray[i] - 128) / 128
+        sumSquares += normalized * normalized
+    }
+    const rms = Math.sqrt(sumSquares / dataArray.length)
+    return rms
+}
+
 export default class AudioComponent {
 
     _client:xStreamingPlayer
@@ -7,6 +19,7 @@ export default class AudioComponent {
     _audioSource
     _mediaSource
     _audioRender
+    _timer
 
     constructor(client:xStreamingPlayer) {
         this._client = client
@@ -20,6 +33,34 @@ export default class AudioComponent {
         if (this._client._enable_audio_control) {
             const audioCtx = new (window.AudioContext)()
             const source = audioCtx.createMediaStreamSource(srcObject)
+
+            if (this._client._enable_audio_rumble) {
+                const analyser = audioCtx.createAnalyser()
+                analyser.fftSize = 512
+                source.connect(analyser)
+                const dataArray = new Uint8Array(analyser.fftSize)
+
+                analyser.getByteTimeDomainData(dataArray)
+                this._timer = window.setInterval(() => {
+                    const volume = getVolume(analyser, dataArray)
+                    
+                    if (volume > this._client._audio_rumble_threshold) {
+                        const gamepads = navigator.getGamepads()
+                        for (let i = 0; i < gamepads.length; i++) {
+                            const gp = gamepads[i]
+                            if (gp && gp.vibrationActuator) {
+                                gp.vibrationActuator.playEffect('dual-rumble', {
+                                    startDelay: 0,
+                                    duration: 100,
+                                    weakMagnitude: 1.0 * (volume / 0.5),
+                                    strongMagnitude: 0,
+                                })
+                            }
+                        }
+                    }
+                }, 16)
+            }
+
             const gainNode = audioCtx.createGain()
             source.connect(gainNode).connect(audioCtx.destination)
             if (this._client._audio_volume) {
@@ -46,6 +87,35 @@ export default class AudioComponent {
                 // audioRender.play()
 
                 audioRender.autoplay = true
+
+                if (this._client._enable_audio_rumble) {
+                    const audioCtx = new (window.AudioContext)()
+                    const source = audioCtx.createMediaStreamSource(srcObject)
+                    const analyser = audioCtx.createAnalyser()
+                    analyser.fftSize = 512
+                    source.connect(analyser)
+                    const dataArray = new Uint8Array(analyser.fftSize)
+
+                    analyser.getByteTimeDomainData(dataArray)
+                    this._timer = window.setInterval(() => {
+                        const volume = getVolume(analyser, dataArray)
+                        
+                        if (volume > this._client._audio_rumble_threshold) {
+                            const gamepads = navigator.getGamepads()
+                            for (let i = 0; i < gamepads.length; i++) {
+                                const gp = gamepads[i]
+                                if (gp && gp.vibrationActuator) {
+                                    gp.vibrationActuator.playEffect('dual-rumble', {
+                                        startDelay: 0,
+                                        duration: 100,
+                                        weakMagnitude: 1.0 * (volume / 0.5),
+                                        strongMagnitude: 0,
+                                    })
+                                }
+                            }
+                        }
+                    }, 16)
+                }
 
                 this._audioRender = audioRender
                 
@@ -103,6 +173,8 @@ export default class AudioComponent {
         delete this._mediaSource
         delete this._audioRender
         delete this._audioSource
+
+        this._timer && clearInterval(this._timer)
         
         document.getElementById(this.getElementId())?.remove()
 
