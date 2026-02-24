@@ -45,18 +45,41 @@ export default class AudioComponent {
                     const volume = getVolume(analyser, dataArray)
                     
                     if (volume > this._client._audio_rumble_threshold) {
-                        const gamepads = navigator.getGamepads()
-                        for (let i = 0; i < gamepads.length; i++) {
-                            const gp = gamepads[i]
-                            if (gp && gp.vibrationActuator) {
-                                gp.vibrationActuator.playEffect('dual-rumble', {
-                                    startDelay: 0,
-                                    duration: 100,
-                                    weakMagnitude: 1.0 * (volume / 0.5),
-                                    strongMagnitude: 0,
-                                })
+                        if (this._client._vibration_mode === 'Webview') {
+                            const gamepads = navigator.getGamepads()
+                            for (let i = 0; i < gamepads.length; i++) {
+                                const gp = gamepads[i]
+                                if (gp && gp.vibrationActuator) {
+                                    gp.vibrationActuator.playEffect('dual-rumble', {
+                                        startDelay: 0,
+                                        duration: 100,
+                                        weakMagnitude: 1.0 * (volume / 0.5),
+                                        strongMagnitude: 0,
+                                    })
+                                }
+                            }
+                        } else if (this._client._vibration_mode === 'Native') {
+                            if (window.ReactNativeWebView) {
+                                window.ReactNativeWebView.postMessage(
+                                    JSON.stringify({
+                                        type: 'audioVibration',
+                                        message: {
+                                            rumbleData: {
+                                                startDelay: 0,
+                                                duration: 100,
+                                                weakMagnitude: 1.0 * (volume / 0.5),
+                                                strongMagnitude: 0,
+
+                                                leftTrigger: 0,
+                                                rightTrigger: 0,
+                                            },
+                                            repeat: false,
+                                        },
+                                    }),
+                                )
                             }
                         }
+                        
                     }
                 }, 16)
             }
@@ -101,16 +124,38 @@ export default class AudioComponent {
                         const volume = getVolume(analyser, dataArray)
                         
                         if (volume > this._client._audio_rumble_threshold) {
-                            const gamepads = navigator.getGamepads()
-                            for (let i = 0; i < gamepads.length; i++) {
-                                const gp = gamepads[i]
-                                if (gp && gp.vibrationActuator) {
-                                    gp.vibrationActuator.playEffect('dual-rumble', {
-                                        startDelay: 0,
-                                        duration: 100,
-                                        weakMagnitude: 1.0 * (volume / 0.5),
-                                        strongMagnitude: 0,
-                                    })
+                            if (this._client._vibration_mode === 'Webview') {
+                                const gamepads = navigator.getGamepads()
+                                for (let i = 0; i < gamepads.length; i++) {
+                                    const gp = gamepads[i]
+                                    if (gp && gp.vibrationActuator) {
+                                        gp.vibrationActuator.playEffect('dual-rumble', {
+                                            startDelay: 0,
+                                            duration: 100,
+                                            weakMagnitude: 1.0 * (volume / 0.5),
+                                            strongMagnitude: 0,
+                                        })
+                                    }
+                                }
+                            } else if (this._client._vibration_mode === 'Native') {
+                                if (window.ReactNativeWebView) {
+                                    window.ReactNativeWebView.postMessage(
+                                        JSON.stringify({
+                                            type: 'audioVibration',
+                                            message: {
+                                                rumbleData: {
+                                                    startDelay: 0,
+                                                    duration: 100,
+                                                    weakMagnitude: 1.0 * (volume / 0.5),
+                                                    strongMagnitude: 0,
+
+                                                    leftTrigger: 0,
+                                                    rightTrigger: 0,
+                                                },
+                                                repeat: false,
+                                            },
+                                        }),
+                                    )
                                 }
                             }
                         }
