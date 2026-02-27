@@ -23,6 +23,7 @@ interface xStreamingPlayerConfig {
     input_touch?:boolean;
     input_mousekeyboard?:boolean;
     input_legacykeyboard?:boolean;
+    input_coop?:boolean; // Co-op双人模式开关，Default: false
     input_mousekeyboard_config?:MouseKeyboardConfig; // Default: MouseKeyboardConfig.default();
 }
 
@@ -129,6 +130,7 @@ export default class xStreamingPlayer {
             input_touch: false,
             input_mousekeyboard: false,
             input_legacykeyboard: true,
+            input_coop: false,
         }, config)
 
         this._eventBus = new EventBus()
@@ -350,6 +352,10 @@ export default class xStreamingPlayer {
 
     setKeyboardInput(enabled: boolean) {
         this._config.input_legacykeyboard = enabled
+    }
+
+    setCoOpMode(enabled: boolean) {
+        this._config.input_coop = enabled
     }
 
     setVibration(isVibrated: boolean) {

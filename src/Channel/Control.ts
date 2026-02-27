@@ -20,8 +20,15 @@ export default class ControlChannel extends BaseChannel {
 
         this.sendGamepadRemoved(0)
 
+        if (this._client._config.input_coop) {
+            this.sendGamepadRemoved(1)
+        }
+
         setTimeout(() => {
             this.sendGamepadAdded(0)
+            if (this._client._config.input_coop) {
+                this.sendGamepadAdded(1)
+            }
         }, 500)
 
         this._keyframeInterval = setInterval(() => {

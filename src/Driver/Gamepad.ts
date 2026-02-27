@@ -235,7 +235,41 @@ export default class GamepadDriver implements Driver {
         const states:Array<InputFrame> = []
         const gamepads = navigator.getGamepads()
 
-        if (this._application?._gamepad_index !== undefined && this._application?._gamepad_index > -1) {
+        if (this._application?._config.input_coop === true) {
+            const activeGamepads:Array<Gamepad> = []
+            for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
+                const gamepadState = gamepads[gamepad]
+                if (gamepadState === null || !gamepadState.connected) {
+                    continue
+                }
+
+                // Skip virtual controller
+                if (gamepadState.id &&
+                (gamepadState.id.indexOf('virtual') > -1 ||
+                 gamepadState.id.indexOf('Virtual') > -1) &&
+                gamepadState.axes.length !== 4) {
+                    continue
+                }
+
+                activeGamepads.push(gamepadState)
+                if (activeGamepads.length === 2) {
+                    break
+                }
+            }
+
+            for (let playerIndex = 0; playerIndex < activeGamepads.length; playerIndex++) {
+                let state = this.mapStateLabels(activeGamepads[playerIndex].buttons, activeGamepads[playerIndex].axes)
+                state.GamepadIndex = playerIndex
+
+                // Co-op模式下只把键盘输入合并给1P（GamepadIndex 0）
+                if (playerIndex === 0 && this._application?._config.input_legacykeyboard === true) {
+                    const kbState = this._application?._keyboardDriver.requestState()
+                    state = this.mergeState(state, kbState)
+                }
+
+                states.push(state)
+            }
+        } else if (this._application?._gamepad_index !== undefined && this._application?._gamepad_index > -1) {
             const gamepadState = gamepads[this._application._gamepad_index]
     
             if (gamepadState !== null && gamepadState.connected) {
