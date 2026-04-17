@@ -120,8 +120,12 @@ export default class xStreamingPlayer {
     _audio_rumble_threshold = 0.15
     _audio_gain_node: any = null
     _polling_rate = 250 // 手柄回报率
+    _maxTouchPoints = 0
     _mouse_sensitive = 0.5 // 鼠标灵敏度
     _fsr_sharpness = 2 // FSR锐化等级 1-10
+    _supportedSystemUis:Array<number>|undefined = undefined
+    _systemUiHandler
+    _messageHandler
 
     constructor(elementId:string, config:xStreamingPlayerConfig = {}) {
         console.log('xStreamingPlayer loaded!')
@@ -136,6 +140,11 @@ export default class xStreamingPlayer {
         this._eventBus = new EventBus()
         this._elementHolder = elementId
         this._elementHolderRandom = (Math.floor(Math.random() * 100) + 1)
+        const touchEnabled = this._config.ui_touchenabled === true || this._config.input_touch === true
+        this._maxTouchPoints = touchEnabled ? 2 : 0
+        if (Array.isArray(this._config.ui_systemui)) {
+            this._supportedSystemUis = [...this._config.ui_systemui]
+        }
     }
 
     bind(params?: any) {
@@ -338,6 +347,43 @@ export default class xStreamingPlayer {
 
     setPollRate(value: number) {
         this._polling_rate = value || 250
+    }
+
+    setMaxTouchPoints(value: number) {
+        const next = Math.max(0, Math.min(255, Math.floor(Number(value) || 0)))
+        this._maxTouchPoints = next
+    }
+
+    getMaxTouchPoints() {
+        return this._maxTouchPoints
+    }
+
+    setSupportedSystemUis(value: Array<number>) {
+        if (!Array.isArray(value)) {
+            this._supportedSystemUis = undefined
+            return
+        }
+        this._supportedSystemUis = [...value]
+    }
+
+    getSupportedSystemUis() {
+        return this._supportedSystemUis
+    }
+
+    setSystemUiHandler(listener) {
+        this._systemUiHandler = listener
+    }
+
+    getSystemUiHandler() {
+        return this._systemUiHandler
+    }
+
+    setMessageHandler(listener) {
+        this._messageHandler = listener
+    }
+
+    getMessageHandler() {
+        return this._messageHandler
     }
 
     setAudioControl(value: boolean) {

@@ -52,22 +52,20 @@ export default class BaseChannel {
     // Channel functions
     send(data) {
         const channel = this.getClient().getChannel(this._channelName)
+        if (!channel || channel.readyState !== 'open') {
+            return
+        }
 
         // Encode to ArrayBuffer if not ArrayBuffer
-        
-        if(channel.readyState === 'open') {
-            if(this._channelName !== 'input' && this._channelName !== 'chat') {
-                console.log('xStreamingPlayer Channel/Base.ts - ['+this._channelName+'] Sending message:', data)
-            }
-
-            if(typeof data === 'string'){
-                data = (new TextEncoder).encode(data)
-            }
-
-            channel.send(data)
-        } else {
-            console.warn('xStreamingPlayer Channel/Base.ts - ['+this._channelName+'] Channel is closed. Failed to send packet:', data)
+        if(this._channelName !== 'input' && this._channelName !== 'chat') {
+            console.log('xStreamingPlayer Channel/Base.ts - ['+this._channelName+'] Sending message:', data)
         }
+
+        if(typeof data === 'string'){
+            data = (new TextEncoder).encode(data)
+        }
+
+        channel.send(data)
     }
 
     // Base functions

@@ -1,6 +1,7 @@
 import BaseChannel from './Base'
 
 export default class ControlChannel extends BaseChannel {
+    _gamepadSyncTimeout: any = null
 
     onOpen(event) {
         super.onOpen(event)
@@ -8,12 +9,19 @@ export default class ControlChannel extends BaseChannel {
     }
 
     start() {
-        const authRequest = JSON.stringify({
-            'message':'authorizationRequest',
-            'accessKey':'4BDB3609-C1F1-4195-9B37-FEFF45DA8B8E',
-        })
+        if (this._keyframeInterval) {
+            clearInterval(this._keyframeInterval)
+            this._keyframeInterval = null
+        }
+        if (this._gamepadSyncTimeout) {
+            clearTimeout(this._gamepadSyncTimeout)
+            this._gamepadSyncTimeout = null
+        }
 
-        this.send(authRequest)
+        this._sendControlMessage({
+            message: 'authorizationRequest',
+            accessKey: '4BDB3609-C1F1-4195-9B37-FEFF45DA8B8E',
+        })
 
         this._client._inputDriver.start()
         this._client._keyboardDriver.start()
@@ -24,7 +32,7 @@ export default class ControlChannel extends BaseChannel {
             this.sendGamepadRemoved(1)
         }
 
-        setTimeout(() => {
+        this._gamepadSyncTimeout = setTimeout(() => {
             this.sendGamepadAdded(0)
             if (this._client._config.input_coop) {
                 this.sendGamepadAdded(1)
@@ -37,21 +45,19 @@ export default class ControlChannel extends BaseChannel {
     }
 
     sendGamepadAdded(gamepadIndex) {
-        const gamepadRequest = JSON.stringify({
-            'message': 'gamepadChanged',
-            'gamepadIndex': gamepadIndex,
-            'wasAdded': true,
+        this._sendControlMessage({
+            message: 'gamepadChanged',
+            gamepadIndex: gamepadIndex,
+            wasAdded: true,
         })
-        this.send(gamepadRequest)
     }
 
     sendGamepadRemoved(gamepadIndex) {
-        const gamepadRequest = JSON.stringify({
-            'message': 'gamepadChanged',
-            'gamepadIndex': gamepadIndex,
-            'wasAdded': false,
+        this._sendControlMessage({
+            message: 'gamepadChanged',
+            gamepadIndex: gamepadIndex,
+            wasAdded: false,
         })
-        this.send(gamepadRequest)
     }
     
     onMessage(event) {
@@ -68,16 +74,49 @@ export default class ControlChannel extends BaseChannel {
         this._client._inputDriver.stop()
         this._client._keyboardDriver.stop()
 
-        this._keyframeInterval && clearInterval(this._keyframeInterval)
+        if (this._keyframeInterval) {
+            clearInterval(this._keyframeInterval)
+            this._keyframeInterval = null
+        }
+        if (this._gamepadSyncTimeout) {
+            clearTimeout(this._gamepadSyncTimeout)
+            this._gamepadSyncTimeout = null
+        }
+        this.sendGamepadRemoved(0)
+        if (this._client._config.input_coop) {
+            this.sendGamepadRemoved(1)
+        }
+    }
+
+    destroy() {
+        if (this._keyframeInterval) {
+            clearInterval(this._keyframeInterval)
+            this._keyframeInterval = null
+        }
+        if (this._gamepadSyncTimeout) {
+            clearTimeout(this._gamepadSyncTimeout)
+            this._gamepadSyncTimeout = null
+        }
+        this.sendGamepadRemoved(0)
+        if (this._client._config.input_coop) {
+            this.sendGamepadRemoved(1)
+        }
+        super.destroy()
     }
 
     requestKeyframeRequest() {
         console.log('xStreamingPlayer Channel/Control.ts - ['+this._channelName+'] User requested Video KeyFrame')
-        const keyframeRequest = JSON.stringify({
+        this._sendControlMessage({
             message: 'videoKeyframeRequested',
             ifrRequested: true,
         })
+    }
 
-        this.send(keyframeRequest)
+    _sendControlMessage(data: any) {
+        const channel = this.getClient().getChannel(this._channelName)
+        if (!channel || channel.readyState !== 'open') {
+            return
+        }
+        this.send(JSON.stringify(data))
     }
 }
