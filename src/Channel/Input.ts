@@ -404,7 +404,7 @@ export default class InputChannel extends BaseChannel {
         }
     }
 
-    getPointerQueue(size=2) {
+    getPointerQueue(size=30) {
         return this._pointerFrames.splice(0, (size-1))
     }
 
@@ -428,6 +428,82 @@ export default class InputChannel extends BaseChannel {
         return this._keyboardFrames.length
     }
 
+    _serializePointerEvent(e: PointerEvent) {
+        const target = (e.currentTarget || e.target) as HTMLElement
+        const rect = target?.getBoundingClientRect?.()
+        const containerWidth = rect?.width || target?.clientWidth || 1
+        const containerHeight = rect?.height || target?.clientHeight || 1
+
+        let sourceAspect = 16 / 9
+        const videoTarget = target as HTMLVideoElement
+        if (videoTarget?.videoWidth && videoTarget?.videoHeight) {
+            sourceAspect = videoTarget.videoWidth / videoTarget.videoHeight
+        } else if (typeof this._client?._video_format === 'string' && this._client._video_format.includes(':')) {
+            const ratioParts = this._client._video_format.split(':')
+            const ratioWidth = parseFloat(ratioParts[0])
+            const ratioHeight = parseFloat(ratioParts[1])
+            if (ratioWidth > 0 && ratioHeight > 0) {
+                sourceAspect = ratioWidth / ratioHeight
+            }
+        }
+
+        const objectFit = videoTarget?.style?.objectFit || ''
+        const containerAspect = containerWidth / containerHeight
+        let clientWidth = containerWidth
+        let clientHeight = containerHeight
+        let offsetX = 0
+        let offsetY = 0
+
+        if (objectFit === 'contain') {
+            if (sourceAspect > containerAspect) {
+                clientHeight = containerWidth / sourceAspect
+                offsetY = (containerHeight - clientHeight) / 2
+            } else {
+                clientWidth = containerHeight * sourceAspect
+                offsetX = (containerWidth - clientWidth) / 2
+            }
+        } else if (objectFit === 'cover') {
+            if (sourceAspect > containerAspect) {
+                clientWidth = containerHeight * sourceAspect
+                offsetX = (containerWidth - clientWidth) / 2
+            } else {
+                clientHeight = containerWidth / sourceAspect
+                offsetY = (containerHeight - clientHeight) / 2
+            }
+        }
+
+        const localX = (e.clientX || 0) - (rect?.left || 0)
+        const localY = (e.clientY || 0) - (rect?.top || 0)
+        const x = Math.max(0, Math.min(clientWidth, localX - offsetX))
+        const y = Math.max(0, Math.min(clientHeight, localY - offsetY))
+
+        return {
+            type: e.type === 'pointercancel' ? 'pointerup' : e.type,
+            pointerId: e.pointerId ?? 0,
+            pressure: e.pressure ?? 0,
+            twist: e.twist ?? 0,
+            width: e.width || 1,
+            height: e.height || 1,
+            x,
+            y,
+            clientWidth,
+            clientHeight,
+        }
+    }
+
+    _queueTouchPointerEvent(e: PointerEvent) {
+        const pointerEvent = this._serializePointerEvent(e)
+        this._touchLastPointerId = pointerEvent.pointerId
+
+        if(this._touchEvents[pointerEvent.pointerId] === undefined){
+            this._touchEvents[pointerEvent.pointerId] = {
+                events: [],
+            }
+        }
+
+        this._touchEvents[pointerEvent.pointerId].events.push(pointerEvent)
+    }
+
     onPointerMove(e){
         e.preventDefault()
 
@@ -446,14 +522,8 @@ export default class InputChannel extends BaseChannel {
             })
         }
 
-        if(this._touchActive === true){
-            this._touchLastPointerId = e.pointerId
-            if(this._touchEvents[e.pointerId] === undefined){
-                this._touchEvents[e.pointerId] = {
-                    events: [],
-                }
-            }
-            this._touchEvents[e.pointerId].events.push(e)
+        if(this._touchActive === true && e.pointerType === 'touch'){
+            this._queueTouchPointerEvent(e)
         }
     }
 
@@ -528,17 +598,9 @@ export default class InputChannel extends BaseChannel {
             })
         }
 
-        setTimeout(() => {
-            if(this._touchActive === true){
-                this._touchLastPointerId = e.pointerId
-                if(this._touchEvents[e.pointerId] === undefined){
-                    this._touchEvents[e.pointerId] = {
-                        events: [],
-                    }
-                }
-                this._touchEvents[e.pointerId].events.push(e)
-            }
-        }, 32)
+        if(this._touchActive === true && e.pointerType === 'touch'){
+            this._queueTouchPointerEvent(e)
+        }
     }
 
     onPointerScroll(e){

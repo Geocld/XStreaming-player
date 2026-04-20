@@ -224,77 +224,52 @@ export default class InputPacket {
     }
 
     _writePointerData(packet:DataView, offset:number, frames:Array<PointerFrame>){
-        packet.setUint8(offset, 1)
-        // packet.setUint8(offset, frames.length)
+        packet.setUint8(offset, frames.length)
         offset++
 
-        if(frames.length >= 2){
-            console.warn('pointerQueue is bigger then 1. Only one event will be sent.')
+        if(frames.length >= 30){
+            console.warn('pointerQueue is bigger then 30. This might impact reliability!')
         }
 
-        // for (; frames.length > 0;) {
-        // this._inputFps.count()
-        const shift = frames.shift()
-        if(shift !== undefined){
+        const targetWidth = 1920
+        const targetHeight = 1080
+
+        for (; frames.length > 0;) {
+            const shift = frames.shift()
+            if(shift === undefined){
+                continue
+            }
+
             packet.setUint8(offset, shift.events.length)
             offset++
 
-            const targetWidth = 1920
-            const targetHeight = 1080
-
             for (const event in shift.events) {
                 const pointerEvent = shift.events[event]
-                const rect = pointerEvent.target.getBoundingClientRect()
 
-                const elementRelativeX = (pointerEvent.x - rect.left) / rect.width
-                const elementRelativeY = (pointerEvent.y - rect.top) / rect.height
+                const clientWidth = Math.max(1, pointerEvent.clientWidth || targetWidth)
+                const clientHeight = Math.max(1, pointerEvent.clientHeight || targetHeight)
+                const width = Math.max(1, pointerEvent.width || 1)
+                const height = Math.max(1, pointerEvent.height || 1)
+                const pressure = Math.max(0, Math.min(1, pointerEvent.pressure || 0))
+                const twist = Math.max(0, pointerEvent.twist || 0)
 
-                const mappedX = elementRelativeX * targetWidth
-                const mappedY = elementRelativeY * targetHeight
+                const normalizedHeight = Math.max(0, Math.min(65535, Math.round((height * targetHeight) / clientHeight)))
+                const normalizedWidth = Math.max(0, Math.min(65535, Math.round((width * targetWidth) / clientWidth)))
+                const normalizedX = Math.max(0, Math.min(targetWidth, Math.round((pointerEvent.x * targetWidth) / clientWidth)))
+                const normalizedY = Math.max(0, Math.min(targetHeight, Math.round((pointerEvent.y * targetHeight) / clientHeight)))
 
-                let tiltX = 0.06575749909301447 * (targetHeight / 1)
-                let tiltY = 0.06575749909301447 * (targetWidth / 1)
-
-                if (pointerEvent.type === 'pointerup') {
-                    tiltX = 0
-                    tiltY = 0
-                }
-
-                packet.setUint16(offset, tiltX, true)
-                packet.setUint16(offset + 2, tiltY, true)
-                packet.setUint8(offset + 4, 255 * pointerEvent.pressure)
-                packet.setUint16(offset + 5, pointerEvent.twist, true)
-                packet.setUint32(offset + 7, 0, true)
-
-                let finalX = mappedX
-                let finalY = mappedY
-
-                // 移动端补偿?
-                if (window.ReactNativeWebView) {
-                    const center = targetWidth / 2
-                    if (mappedX < center) {
-                        finalX -= 50
-                    } else if (mappedX > center) { // right
-                        if (mappedX - center > 80) {
-                            finalX += 80
-                        }
-                    }
-
-                    finalY = mappedY - 10
-                }
-
-                if (pointerEvent.type === 'pointerup') {
-                    finalX = 0
-                    finalY = 0
-                }
-
-                packet.setUint32(offset + 11, finalX, true)
-                packet.setUint32(offset + 15, finalY, true)
+                packet.setUint16(offset, normalizedHeight, true)
+                packet.setUint16(offset + 2, normalizedWidth, true)
+                packet.setUint8(offset + 4, Math.round(255 * pressure))
+                packet.setUint16(offset + 5, twist, true)
+                packet.setUint32(offset + 7, pointerEvent.pointerId || 0, true)
+                packet.setUint32(offset + 11, normalizedX, true)
+                packet.setUint32(offset + 15, normalizedY, true)
                 packet.setUint8(
                     offset + 19,
                     pointerEvent.type === 'pointerdown'
                         ? 1
-                        : pointerEvent.type === 'pointerup'
+                        : (pointerEvent.type === 'pointerup' || pointerEvent.type === 'pointercancel')
                             ? 2
                             : pointerEvent.type === 'pointermove'
                                 ? 3
@@ -304,7 +279,6 @@ export default class InputPacket {
                 offset = offset + 20
             }
         }
-        // }
 
         return offset
     }
@@ -391,7 +365,7 @@ export default class InputPacket {
             offset++
         }
 
-        if(offset !== offset){
+        if(offset !== this._totalSize){
             throw new Error('Packet length mismatch. Something is wrong!')
         }
 
