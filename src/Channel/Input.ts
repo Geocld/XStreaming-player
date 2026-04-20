@@ -175,15 +175,6 @@ export default class InputChannel extends BaseChannel {
                 }
             }
 
-            if(this._client._config.input_touch === true && Object.keys(this._touchEvents).length > 0){
-                for(const pointerEvent in this._touchEvents){
-                    this._pointerFrames.push({
-                        events: this._touchEvents[pointerEvent].events,
-                    })
-                }
-                this._touchEvents = {}
-            }
-
             const metadataQueue = this.getMetadataQueue()
             const gamepadQueue = this.getGamepadQueue()
             const pointerQueue = this.getPointerQueue()
@@ -372,6 +363,7 @@ export default class InputChannel extends BaseChannel {
 
     onClose(event) {
         clearInterval(this._inputInterval)
+        this._activeTouchPointerIds.clear()
 
         super.onClose(event)
         // console.log('xStreamingPlayer Channel/Input.ts - ['+this._channelName+'] onClose:', event)
@@ -428,8 +420,7 @@ export default class InputChannel extends BaseChannel {
         return this._keyboardFrames.length
     }
 
-    _serializePointerEvent(e: PointerEvent) {
-        const target = (e.currentTarget || e.target) as HTMLElement
+    _resolveInputViewport(target: HTMLElement) {
         const rect = target?.getBoundingClientRect?.()
         const containerWidth = rect?.width || target?.clientWidth || 1
         const containerHeight = rect?.height || target?.clientHeight || 1
@@ -472,10 +463,22 @@ export default class InputChannel extends BaseChannel {
             }
         }
 
-        const localX = (e.clientX || 0) - (rect?.left || 0)
-        const localY = (e.clientY || 0) - (rect?.top || 0)
-        const x = Math.max(0, Math.min(clientWidth, localX - offsetX))
-        const y = Math.max(0, Math.min(clientHeight, localY - offsetY))
+        return {
+            rect,
+            clientWidth,
+            clientHeight,
+            offsetX,
+            offsetY,
+        }
+    }
+
+    _serializePointerEvent(e: PointerEvent) {
+        const target = (e.currentTarget || e.target) as HTMLElement
+        const viewport = this._resolveInputViewport(target)
+        const localX = (e.clientX || 0) - (viewport.rect?.left || 0)
+        const localY = (e.clientY || 0) - (viewport.rect?.top || 0)
+        const x = Math.max(0, Math.min(viewport.clientWidth, localX - viewport.offsetX))
+        const y = Math.max(0, Math.min(viewport.clientHeight, localY - viewport.offsetY))
 
         return {
             type: e.type === 'pointercancel' ? 'pointerup' : e.type,
@@ -486,25 +489,82 @@ export default class InputChannel extends BaseChannel {
             height: e.height || 1,
             x,
             y,
-            clientWidth,
-            clientHeight,
+            clientWidth: viewport.clientWidth,
+            clientHeight: viewport.clientHeight,
         }
     }
 
-    _queueTouchPointerEvent(e: PointerEvent) {
-        const pointerEvent = this._serializePointerEvent(e)
-        this._touchLastPointerId = pointerEvent.pointerId
+    _serializeTouchPoint(target: HTMLElement, touch: Touch, type: string) {
+        const viewport = this._resolveInputViewport(target)
+        const localX = (touch.clientX || 0) - (viewport.rect?.left || 0)
+        const localY = (touch.clientY || 0) - (viewport.rect?.top || 0)
+        const x = Math.max(0, Math.min(viewport.clientWidth, localX - viewport.offsetX))
+        const y = Math.max(0, Math.min(viewport.clientHeight, localY - viewport.offsetY))
 
-        if(this._touchEvents[pointerEvent.pointerId] === undefined){
-            this._touchEvents[pointerEvent.pointerId] = {
-                events: [],
-            }
+        return {
+            type,
+            pointerId: touch.identifier ?? 0,
+            pressure: touch.force ?? 0,
+            twist: touch.rotationAngle ?? 0,
+            width: Math.max(1, (touch.radiusX || 0) * 2),
+            height: Math.max(1, (touch.radiusY || 0) * 2),
+            x,
+            y,
+            clientWidth: viewport.clientWidth,
+            clientHeight: viewport.clientHeight,
         }
+    }
 
-        this._touchEvents[pointerEvent.pointerId].events.push(pointerEvent)
+    _queueTouchPoint(target: HTMLElement, touch: Touch, type: string) {
+        const pointerEvent = this._serializeTouchPoint(target, touch, type)
+        this._pointerFrames.push({
+            events: [pointerEvent],
+        })
+    }
+
+    _activeTouchPointerIds = new Set<number>()
+
+    onTouchEvent(e: TouchEvent){
+        e.preventDefault()
+
+        this._mouseActive = false
+        this._touchActive = true
+
+        const target = (e.currentTarget || e.target) as HTMLElement
+
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches.item(i)
+            if (!touch) {
+                continue
+            }
+
+            const pointerId = touch.identifier
+            let type = 'pointermove'
+
+            if (e.type === 'touchstart') {
+                type = this._activeTouchPointerIds.has(pointerId) ? 'pointermove' : 'pointerdown'
+                this._activeTouchPointerIds.add(pointerId)
+            } else if (e.type === 'touchmove') {
+                if (!this._activeTouchPointerIds.has(pointerId)) {
+                    type = 'pointerdown'
+                    this._activeTouchPointerIds.add(pointerId)
+                } else {
+                    type = 'pointermove'
+                }
+            } else if (e.type === 'touchend' || e.type === 'touchcancel') {
+                type = 'pointerup'
+                this._activeTouchPointerIds.delete(pointerId)
+            }
+
+            this._queueTouchPoint(target, touch, type)
+        }
     }
 
     onPointerMove(e){
+        if (e.pointerType === 'touch') {
+            return
+        }
+
         e.preventDefault()
 
         if(this._mouseActive === true && this._mouseLocked === true){
@@ -520,10 +580,6 @@ export default class InputChannel extends BaseChannel {
                 Buttons: this._mouseStateButtons,
                 Relative: 0, // 0 = Relative, 1 = Absolute
             })
-        }
-
-        if(this._touchActive === true && e.pointerType === 'touch'){
-            this._queueTouchPointerEvent(e)
         }
     }
 
@@ -551,16 +607,14 @@ export default class InputChannel extends BaseChannel {
         })
     }
 
-    _touchEvents = {}
-    _touchLastPointerId = 0
-
     onPointerClick(e){
+        if (e.pointerType === 'touch') {
+            return
+        }
+
         e.preventDefault()
 
-        if (e.pointerType === 'touch'){
-            this._mouseActive = false
-            this._touchActive = true
-        } else if (e.pointerType === 'mouse'){
+        if (e.pointerType === 'mouse'){
             this._mouseActive = true
             this._touchActive = false
         }
@@ -596,10 +650,6 @@ export default class InputChannel extends BaseChannel {
                 Buttons: this._mouseStateButtons,
                 Relative: 0, // 0 = Relative, 1 = Absolute
             })
-        }
-
-        if(this._touchActive === true && e.pointerType === 'touch'){
-            this._queueTouchPointerEvent(e)
         }
     }
 

@@ -544,6 +544,10 @@ export default class VideoComponent {
             videoRender.addEventListener('pointerdown', (e) => this._client.getChannelProcessor('input')?.onPointerClick(e), { passive: false }),
             videoRender.addEventListener('pointerup', (e) => this._client.getChannelProcessor('input')?.onPointerClick(e), { passive: false }),
             videoRender.addEventListener('pointercancel', (e) => this._client.getChannelProcessor('input')?.onPointerClick(e), { passive: false }),
+            videoRender.addEventListener('touchstart', (e) => this._client.getChannelProcessor('input')?.onTouchEvent(e), { passive: false }),
+            videoRender.addEventListener('touchmove', (e) => this._client.getChannelProcessor('input')?.onTouchEvent(e), { passive: false }),
+            videoRender.addEventListener('touchend', (e) => this._client.getChannelProcessor('input')?.onTouchEvent(e), { passive: false }),
+            videoRender.addEventListener('touchcancel', (e) => this._client.getChannelProcessor('input')?.onTouchEvent(e), { passive: false }),
             videoRender.addEventListener('wheel', (e) => this._client.getChannelProcessor('input')?.onPointerScroll(e), { passive: false })
 
             // Keyboard events
