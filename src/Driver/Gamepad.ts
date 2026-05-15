@@ -169,7 +169,7 @@ export default class GamepadDriver implements Driver {
     run(){
         let gpState
         if (this._application?._gamepad_kernal === 'Native') {
-            gpState = [globalThis.gpState]
+            gpState = globalThis.gpState ? [globalThis.gpState] : []
         } else {
             gpState = this.requestStates()
 

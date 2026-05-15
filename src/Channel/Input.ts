@@ -287,7 +287,28 @@ export default class InputChannel extends BaseChannel {
                 }
             } else if(this._client._vibration_mode === 'Native') {
                 console.log('Use native gamepad vibration')
-                if (window.ReactNativeWebView) {
+                const nativeIpc = (window as any).XStreaming
+                if (nativeIpc && typeof nativeIpc.send === 'function' && this._rumbleEnabled === true) {
+                    if (rumbleData.weakMagnitude > 0 || rumbleData.strongMagnitude > 0) {
+                        nativeIpc.send('app', 'triggerNativeGamepadTestRumble', {
+                            low: rumbleData.weakMagnitude,
+                            high: rumbleData.strongMagnitude,
+                            durationMs: Math.max(0, Math.round(rumbleData.duration)),
+                        }).catch((error) => {
+                            console.log('native gamepad rumble failed:', error)
+                        })
+                    }
+
+                    if (rumbleData.leftTrigger > 0 || rumbleData.rightTrigger > 0) {
+                        nativeIpc.send('app', 'triggerNativeGamepadTestTriggerRumble', {
+                            left: rumbleData.leftTrigger,
+                            right: rumbleData.rightTrigger,
+                            durationMs: Math.max(0, Math.round(rumbleData.duration)),
+                        }).catch((error) => {
+                            console.log('native gamepad trigger rumble failed:', error)
+                        })
+                    }
+                } else if (window.ReactNativeWebView) {
                     window.ReactNativeWebView.postMessage(
                         JSON.stringify({
                             type: 'nativeVibration',
@@ -387,7 +408,7 @@ export default class InputChannel extends BaseChannel {
     }
 
     queueGamepadState(input:InputFrame) {
-        if(input !== null) {return this._gamepadFrames.push(input)}
+        if(input !== null && input !== undefined) {return this._gamepadFrames.push(input)}
     }
 
     queueGamepadStates(inputs:Array<InputFrame>) {
