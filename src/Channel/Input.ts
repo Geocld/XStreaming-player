@@ -109,11 +109,20 @@ export default class InputChannel extends BaseChannel {
         // console.log('xStreamingPlayer Channel/Input.ts - ['+this._channelName+'] onOpen:', event)
     }
 
+    getTriggerRumbleValues(left: number, right: number) {
+        if (this._client._swap_trigger_rumble === true) {
+            return { left: right, right: left }
+        }
+
+        return { left, right }
+    }
+
     triggerRumble(gamepad: any, left: number, right: number) {
+        const triggerRumble = this.getTriggerRumbleValues(left, right)
         gamepad.vibrationActuator.playEffect('trigger-rumble', {
             duration: 50,
-            leftTrigger: left,
-            rightTrigger: right,
+            leftTrigger: triggerRumble.left,
+            rightTrigger: triggerRumble.right,
             strongMagnitude: 0,
             weakMagnitude: 1,
         })
@@ -125,9 +134,10 @@ export default class InputChannel extends BaseChannel {
             return false
         }
 
+        const triggerRumble = this.getTriggerRumbleValues(left, right)
         nativeIpc.send('app', 'triggerNativeGamepadTestTriggerRumble', {
-            left,
-            right,
+            left: triggerRumble.left,
+            right: triggerRumble.right,
             durationMs,
             suppressTransientErrors: true,
         }).catch((error) => {
@@ -328,9 +338,10 @@ export default class InputChannel extends BaseChannel {
                     }
 
                     if (rumbleData.leftTrigger > 0 || rumbleData.rightTrigger > 0) {
+                        const triggerRumble = this.getTriggerRumbleValues(rumbleData.leftTrigger, rumbleData.rightTrigger)
                         nativeIpc.send('app', 'triggerNativeGamepadTestTriggerRumble', {
-                            left: rumbleData.leftTrigger,
-                            right: rumbleData.rightTrigger,
+                            left: triggerRumble.left,
+                            right: triggerRumble.right,
                             durationMs: Math.max(0, Math.round(rumbleData.duration)),
                             suppressTransientErrors: true,
                         }).catch((error) => {
@@ -369,6 +380,10 @@ export default class InputChannel extends BaseChannel {
 
                                 if (gamepad.vibrationActuator.effects && gamepad.vibrationActuator.effects.includes('trigger-rumble')) {
                                     if (rumbleData.leftTrigger > 0 || rumbleData.rightTrigger > 0) {
+
+                                        const triggerRumble = this.getTriggerRumbleValues(rumbleData.leftTrigger, rumbleData.rightTrigger)
+                                        rumbleData.leftTrigger = triggerRumble.left
+                                        rumbleData.rightTrigger = triggerRumble.right
 
                                         // Fix: chrome内核左右扳机逻辑相反
                                         // const temp = rumbleData.leftTrigger

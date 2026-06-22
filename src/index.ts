@@ -112,6 +112,7 @@ export default class xStreamingPlayer {
     _edge_compensation = 0
     _custom_gamepad_mapping = null
     _force_trigger_rumble = ''
+    _swap_trigger_rumble = false
     _gamepad_mix = false
     _gamepad_index = -1
     _audio_volume = 1
@@ -437,6 +438,10 @@ export default class xStreamingPlayer {
     
     setForceTriggerRumble(value: string) {
         this._force_trigger_rumble = value
+    }
+
+    setSwapTriggerRumble(value: boolean) {
+        this._swap_trigger_rumble = value
     }
 
     setAudioRumble(enaled: boolean, threshold?: number) {
