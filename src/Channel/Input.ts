@@ -85,6 +85,7 @@ export default class InputChannel extends BaseChannel {
 
     _rumbleInterval = {0: undefined, 1: undefined, 2: undefined, 3: undefined }
     _rumbleEnabled = true
+    _lastForceTriggerRumbleAt = 0
     _adhocState
 
     _isVirtualButtonPressing = false
@@ -111,11 +112,67 @@ export default class InputChannel extends BaseChannel {
     triggerRumble(gamepad: any, left: number, right: number) {
         gamepad.vibrationActuator.playEffect('trigger-rumble', {
             duration: 50,
-            leftTrigger: right,
-            rightTrigger: left,
+            leftTrigger: left,
+            rightTrigger: right,
             strongMagnitude: 0,
             weakMagnitude: 1,
         })
+    }
+
+    triggerNativeTriggerRumble(left: number, right: number, durationMs = 50) {
+        const nativeIpc = (window as any).XStreaming
+        if (!nativeIpc || typeof nativeIpc.send !== 'function' || this._rumbleEnabled !== true) {
+            return false
+        }
+
+        nativeIpc.send('app', 'triggerNativeGamepadTestTriggerRumble', {
+            left,
+            right,
+            durationMs,
+            suppressTransientErrors: true,
+        }).catch((error) => {
+            console.log('native gamepad force trigger rumble failed:', error)
+        })
+
+        return true
+    }
+
+    triggerForceTriggerRumble(mergedState: InputFrame) {
+        if (this._client._force_trigger_rumble === '') {
+            return
+        }
+
+        const left = (
+            (this._client._force_trigger_rumble === 'all' || this._client._force_trigger_rumble === 'left') &&
+            mergedState.LeftTrigger > 0.5
+        ) ? mergedState.LeftTrigger : 0
+        const right = (
+            (this._client._force_trigger_rumble === 'all' || this._client._force_trigger_rumble === 'right') &&
+            mergedState.RightTrigger > 0.5
+        ) ? mergedState.RightTrigger : 0
+
+        if (left <= 0 && right <= 0) {
+            return
+        }
+
+        const now = Date.now()
+        if (now - this._lastForceTriggerRumbleAt < 50) {
+            return
+        }
+
+        if (this._client._vibration_mode === 'Native' && this.triggerNativeTriggerRumble(left, right)) {
+            this._lastForceTriggerRumbleAt = now
+            return
+        }
+
+        const idx = this._client._gamepad_index > -1 ? this._client._gamepad_index : 0
+        const gamepad = (navigator.getGamepads()[idx] as any)
+        if(gamepad && gamepad.vibrationActuator && gamepad.vibrationActuator.type === 'dual-rumble') {
+            if (gamepad.vibrationActuator.effects && gamepad.vibrationActuator.effects.includes('trigger-rumble')) {
+                this.triggerRumble(gamepad, left, right)
+                this._lastForceTriggerRumbleAt = now
+            }
+        }
     }
 
     start(){
@@ -143,36 +200,7 @@ export default class InputChannel extends BaseChannel {
                 
                 this._inputFps.count()
 
-                // Force gamepad trigger rumble
-                if (this._client._force_trigger_rumble !== '') {
-                    const idx = this._client._gamepad_index > -1 ? this._client._gamepad_index : 0
-                    const gamepad = (navigator.getGamepads()[idx] as any)
-                    if(gamepad && gamepad.vibrationActuator && gamepad.vibrationActuator.type === 'dual-rumble') {
-                        if (gamepad.vibrationActuator.effects && gamepad.vibrationActuator.effects.includes('trigger-rumble')) {
-                            if (this._client._force_trigger_rumble === 'all') {
-                                if (mergedState.LeftTrigger > 0.5) {
-                                    this.triggerRumble(gamepad, mergedState.LeftTrigger, 0)
-                                }
-
-                                if (mergedState.RightTrigger > 0.5) {
-                                    this.triggerRumble(gamepad, 0, mergedState.RightTrigger)
-                                }
-                            }
-
-                            if (this._client._force_trigger_rumble === 'left') {
-                                if (mergedState.LeftTrigger > 0.5) {
-                                    this.triggerRumble(gamepad, mergedState.LeftTrigger, 0)
-                                }
-                            }
-
-                            if (this._client._force_trigger_rumble === 'right') {
-                                if (mergedState.RightTrigger > 0.5) {
-                                    this.triggerRumble(gamepad, 0, mergedState.RightTrigger)
-                                }
-                            }
-                        }
-                    }
-                }
+                this.triggerForceTriggerRumble(mergedState)
             }
 
             const metadataQueue = this.getMetadataQueue()
@@ -304,6 +332,7 @@ export default class InputChannel extends BaseChannel {
                             left: rumbleData.leftTrigger,
                             right: rumbleData.rightTrigger,
                             durationMs: Math.max(0, Math.round(rumbleData.duration)),
+                            suppressTransientErrors: true,
                         }).catch((error) => {
                             console.log('native gamepad trigger rumble failed:', error)
                         })
@@ -342,9 +371,9 @@ export default class InputChannel extends BaseChannel {
                                     if (rumbleData.leftTrigger > 0 || rumbleData.rightTrigger > 0) {
 
                                         // Fix: chrome内核左右扳机逻辑相反
-                                        const temp = rumbleData.leftTrigger
-                                        rumbleData.leftTrigger = rumbleData.rightTrigger
-                                        rumbleData.rightTrigger = temp
+                                        // const temp = rumbleData.leftTrigger
+                                        // rumbleData.leftTrigger = rumbleData.rightTrigger
+                                        // rumbleData.rightTrigger = temp
 
                                         // Optimize rumble duration
                                         rumbleData.duration = rumbleData.duration / 2
